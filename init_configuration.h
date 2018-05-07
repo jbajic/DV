@@ -1,11 +1,9 @@
 #ifndef INIT_CONFIGURATION_H
 #define INIT_CONFIGURATION_H
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include "tdp_api.h"
+#include "reminder_node.h"
 
 #define MAX_NUMBER_OF_ELEMENTS 10
 
@@ -44,13 +42,6 @@ typedef struct init_service
     tStreamType vtype;
 } init_service;
 
-typedef struct reminder
-{
-    uint16_t channel_index;
-    char* time;
-    struct reminder* next;
-} reminder;
-
 typedef struct _config_parameters
 {
     uint16_t frequency;
@@ -66,11 +57,7 @@ int freeConfig(config_parameters*);
 
 int analyzeWord(char*, FILE**, config_parameters*);
 
-/**
- *  LIST REMIDNERS FUNCTIONS
-**/
-void addReminderTime(char*, config_parameters*);
 
-void addReminderChannelIndex(uint16_t, config_parameters*);
+void testConfigPrintf(config_parameters*);
 
 #endif

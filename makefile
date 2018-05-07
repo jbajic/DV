@@ -34,7 +34,7 @@ CXXFLAGS = $(CFLAGS)
 
 all: $(TARGET)
 
-SRCS = ./init_configuration.c ./main.c
+SRCS = ./reminder_node.c ./init_configuration.c ./main.c
 
 $(TARGET):
 	$(CC) -o main $(INCS) $(SRCS) $(CFLAGS) $(LIBS)
