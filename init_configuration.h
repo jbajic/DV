@@ -4,34 +4,73 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include "tdp_api.h"
 
 #define MAX_NUMBER_OF_ELEMENTS 10
 
-struct init_service
+#define TRUE 1
+#define FALSE 0
+
+enum CONFIG_KEYS {
+    FREQUENCY_KEY = 0,
+    BANDWIDTH_KEY,
+    MODULE_KEY,
+    APID_KEY,
+    VPID_KEY,
+    ATYPE_KEY,
+    VTYPE_KEY,
+    TIME_KEY,
+    CHANNEL_INDEX_KEY,
+    NON_EXISTENT_KEY
+};
+
+
+#define PARSE_ERROR -1
+
+typedef struct { char* key; enum CONFIG_KEYS val; } t_symstruct;
+
+static t_symstruct lookuptable[] = {
+    {"frequency", FREQUENCY_KEY}, {"bandwidth", BANDWIDTH_KEY}, {"module", MODULE_KEY}, {"apid", APID_KEY}, {"vpid", VPID_KEY}, {"atype", ATYPE_KEY}, {"vtype", VTYPE_KEY}, {"time", TIME_KEY}, {"channel_index", CHANNEL_INDEX_KEY}
+};
+
+#define NKEYS (sizeof (lookuptable) / sizeof (t_symstruct))
+
+typedef struct init_service
 {
     uint16_t apid;
     uint16_t vpid;
-    char atype[MAX_NUMBER_OF_ELEMENTS];
-    char vtype[MAX_NUMBER_OF_ELEMENTS];
-};
+    tStreamType atype;
+    tStreamType vtype;
+} init_service;
 
-struct reminder
+typedef struct reminder
 {
     uint16_t channel_index;
-    char time[MAX_NUMBER_OF_ELEMENTS];
-};
+    char* time;
+    struct reminder* next;
+} reminder;
 
-typedef struct config_parameters
+typedef struct _config_parameters
 {
     uint16_t frequency;
     uint16_t bandwidth;
-    char module[MAX_NUMBER_OF_ELEMENTS];
+    t_Module module;
     struct init_service service;
-    struct reminder* reminders;
+    reminder* headReminder;
 } config_parameters;
 
-config_parameters* loadFile(char*** file_path);
+config_parameters* loadFile(char** file_path);
 
-uint8_t freeConfig(config_parameters*);
+int freeConfig(config_parameters*);
+
+int analyzeWord(char*, FILE**, config_parameters*);
+
+/**
+ *  LIST REMIDNERS FUNCTIONS
+**/
+void addReminderTime(char*, config_parameters*);
+
+void addReminderChannelIndex(uint16_t, config_parameters*);
 
 #endif

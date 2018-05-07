@@ -4,7 +4,6 @@ CC_PREFIX=$(CROSS_COMPILE)-
 CC=$(CC_PREFIX)gcc
 CXX=$(CC_PREFIX)g++
 LD=$(CC_PREFIX)ld
-OBJFILES=init_configuration.o main.o
 TARGET=JureProjekt
 
 SYSROOT=$(SDK_ROOTFS)
@@ -19,7 +18,7 @@ INCS += -I./include/ 							\
 		-I$(GALOIS_INCLUDE)/PE/Common/include/	\
 		-I$(SYSROOT)/usr/include/directfb/
 
-LIBS_PATH = -L./../../tdp_api
+LIBS_PATH = -L./../tdp_api
 
 LIBS_PATH += -L$(SYSROOT)/home/galois/lib/
 
@@ -35,11 +34,10 @@ CXXFLAGS = $(CFLAGS)
 
 all: $(TARGET)
 
-SRCS = ./init_configuration.c
-SRCS = ./main.c
+SRCS = ./init_configuration.c ./main.c
 
-$(TARGET): $(OBJFILES)
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJFILES) $(INCS) $(LIBS)
+$(TARGET):
+	$(CC) -o main $(INCS) $(SRCS) $(CFLAGS) $(LIBS)
     
 clean:
-	rm -f $(OBJFILES)
+	rm -f main
