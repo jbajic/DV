@@ -1,3 +1,22 @@
+/****************************************************************************
+*
+* FERIT
+*
+* -----------------------------------------------------
+* Ispitni zadatak iz predmeta:
+*
+* Digitalna videotehnika
+* -----------------------------------------------------
+* TV aplikacija (Sifra: PPUTVIOS_07_2018_OS)
+* -----------------------------------------------------
+*
+* \init_configuration.c
+* \brief
+* Datoteka sadrzi funkcije za parsiranje XML datoteke u config_parameters strukturu
+* Made on 07.05.2018.
+*
+* @Author Jure Bajic
+*****************************************************************************/
 #include "init_configuration.h"
 
 static int keyFromString(char* key)

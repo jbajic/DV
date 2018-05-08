@@ -34,10 +34,13 @@ CXXFLAGS = $(CFLAGS)
 
 all: $(TARGET)
 
-SRCS = ./reminder_node.c ./init_configuration.c ./main.c
+SRCS += ./player_tuner_modul.c ./init_configuration/reminder_node.c ./init_configuration/init_configuration.c \
+		./main.c
+
+OBJS = main.o reminder_node.o init_configuration.o
 
 $(TARGET):
 	$(CC) -o main $(INCS) $(SRCS) $(CFLAGS) $(LIBS)
     
 clean:
-	rm -f main
+	rm -f *.o

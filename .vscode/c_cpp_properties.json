@@ -36,7 +36,8 @@
                 "/usr/include/x86_64-linux-gnu",
                 "/usr/include",
                 "/home/student/pputvios1/vezbe/tdp_api",
-                "/home/student/pputvios1/vezbe/JureProjekt"
+                "/home/student/pputvios1/vezbe/JureProjekt",
+                "/home/student/pputvios1/vezbe/JureProjekt/init_configuration"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",

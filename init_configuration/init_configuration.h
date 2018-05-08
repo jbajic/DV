@@ -1,3 +1,22 @@
+/****************************************************************************
+*
+* FERIT
+*
+* -----------------------------------------------------
+* Ispitni zadatak iz predmeta:
+*
+* Digitalna videotehnika
+* -----------------------------------------------------
+* TV aplikacija (Sifra: PPUTVIOS_07_2018_OS)
+* -----------------------------------------------------
+*
+* \init_configuration.h
+* \brief
+* Datoteka sadrzi deklaracije potrebnih metoda i struktura za parsiranje XML datoteke
+* Made on 07.05.2018.
+*
+* @Author Jure Bajic
+*****************************************************************************/
 #ifndef INIT_CONFIGURATION_H
 #define INIT_CONFIGURATION_H
 
@@ -56,7 +75,6 @@ config_parameters* loadFile(char** file_path);
 int freeConfig(config_parameters*);
 
 int analyzeWord(char*, FILE**, config_parameters*);
-
 
 void testConfigPrintf(config_parameters*);
 

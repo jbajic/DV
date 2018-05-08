@@ -1,3 +1,22 @@
+/****************************************************************************
+*
+* FERIT
+*
+* -----------------------------------------------------
+* Ispitni zadatak iz predmeta:
+*
+* Digitalna videotehnika
+* -----------------------------------------------------
+* TV aplikacija (Sifra: PPUTVIOS_07_2018_OS)
+* -----------------------------------------------------
+*
+* \reminder_node.c
+* \brief
+* Datoteka definira funkcije za dodavanje i izmjenu liste remindera
+* Made on 07.05.2018.
+*
+* @Author Jure Bajic
+*****************************************************************************/
 #include "reminder_node.h"
 
 void addReminderTime(char** time, reminder** reminderHead)
