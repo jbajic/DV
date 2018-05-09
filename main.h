@@ -1,12 +1,12 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include <stdio.h>
-#include <stdlib.h>
+// #include <stdio.h>
+// #include <stdlib.h>
 //Used in tuner
 #include <time.h>
 #include <linux/input.h>
-#include <stdint.h>
+// #include <stdint.h>
 #include <fcntl.h>
 //Used in tuner
 #include <pthread.h>
@@ -19,9 +19,7 @@
 #include <errno.h>
 
 #include "./init_configuration/init_configuration.h"
-#include "player_tuner_modul.h"
-
-#define ERROR 1
-#define NO_ERROR 0
+#include "./player_tuner/player_tuner.h"
+#include "./table_parser/parser_pat.h"
 
 #endif

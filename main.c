@@ -10,11 +10,16 @@ uint32_t main(int argc, char** argv)
     }
 	config_parameters* config = loadFile(&argv[1]);
     tunerInitialization(config);
+
     startPlayer(handles);
+
+    setupData(handles);
+
     createStream(handles);
 
     fflush(stdin);
     getchar();
+
 
     removeStream(handles);
     stopPlayer(handles);

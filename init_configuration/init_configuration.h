@@ -26,9 +26,6 @@
 
 #define MAX_NUMBER_OF_ELEMENTS 10
 
-#define TRUE 1
-#define FALSE 0
-
 enum CONFIG_KEYS {
     FREQUENCY_KEY = 0,
     BANDWIDTH_KEY,
@@ -48,7 +45,9 @@ enum CONFIG_KEYS {
 typedef struct { char* key; enum CONFIG_KEYS val; } t_symstruct;
 
 static t_symstruct lookuptable[] = {
-    {"frequency", FREQUENCY_KEY}, {"bandwidth", BANDWIDTH_KEY}, {"module", MODULE_KEY}, {"apid", APID_KEY}, {"vpid", VPID_KEY}, {"atype", ATYPE_KEY}, {"vtype", VTYPE_KEY}, {"time", TIME_KEY}, {"channel_index", CHANNEL_INDEX_KEY}
+    {"frequency", FREQUENCY_KEY}, {"bandwidth", BANDWIDTH_KEY}, {"module", MODULE_KEY}, 
+    {"apid", APID_KEY}, {"vpid", VPID_KEY}, {"atype", ATYPE_KEY}, {"vtype", VTYPE_KEY}, 
+    {"time", TIME_KEY}, {"channel_index", CHANNEL_INDEX_KEY}
 };
 
 #define NKEYS (sizeof (lookuptable) / sizeof (t_symstruct))

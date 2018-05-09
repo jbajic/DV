@@ -10,27 +10,25 @@
 * TV aplikacija (Sifra: PPUTVIOS_07_2018_OS)
 * -----------------------------------------------------
 *
-* \reminder_node.h
+* \base.h
 * \brief
-* Datoteka deklarira funkcije za dodavanje i izmjenu liste remindera, te definira i strukturu remindera
-* Made on 07.05.2018.
+* Datoteka s osnovnim funkcijama i makroima dostupni svim modulima
+* Made on 08.05.2018.
 *
 * @Author Jure Bajic
 *****************************************************************************/
-#ifndef REMINDER_NODE_H
-#define REMINDER_NODE_H
+#ifndef BASE_H
+#define BASE_H
 
-#include "./../base.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <pthread.h>
 
-typedef struct reminder
-{
-    uint16_t channel_index;
-    char* time;
-    struct reminder* next;
-} reminder;
+#define ERROR 1
+#define NO_ERROR 0
 
-void addReminderTime(char**, reminder**);
-
-void addReminderChannelIndex(uint16_t, reminder**);
+#define TRUE 1
+#define FALSE 0
 
 #endif

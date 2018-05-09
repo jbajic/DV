@@ -10,14 +10,14 @@
 * TV aplikacija (Sifra: PPUTVIOS_07_2018_OS)
 * -----------------------------------------------------
 *
-* \tuner_modul.c
+* \player_tuner.c
 * \brief
 * Datoteka definira funkcije potrebne za rad tunera i playera
 * Made on 08.05.2018.
 *
 * @Author Jure Bajic
 *****************************************************************************/
-#include "player_tuner_modul.h"
+#include "player_tuner.h"
 
 static inline void textColor(int32_t attr, int32_t fg, int32_t bg)
 {
@@ -28,8 +28,8 @@ static inline void textColor(int32_t attr, int32_t fg, int32_t bg)
    printf("%s", command);
 }
 
-pthread_cond_t statusCondition = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t statusMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t statusCondition = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t statusMutex = PTHREAD_MUTEX_INITIALIZER;
 
 int32_t tunerInitialization(config_parameters* config)
 {
@@ -78,6 +78,95 @@ int32_t startPlayer(player_handles* handles)
     /* Open source (open data flow between tuner and demux) */
     result = Player_Source_Open(handles->playerHandle, &handles->sourceHandle);
     ASSERT_TDP_RESULT(result, "Player_Source_Open");
+    return NO_ERROR;
+}
+
+int32_t setupData(player_handles* player_handles)
+{
+    // int patParsed = FALSE;
+    // pthread_t patParserId;
+    // pthread_create(&patParserId, NULL, &setFilterToPAT,
+    setFilterToPAT(filterPATParserCallback, player_handles);
+    setFilterToPMT(filterPMTParserCallback, player_handles);
+}
+
+// int32_t parseTable(int32_t (*parsefilterCallback)(uint8_t*), player_handles* handles)
+// {
+//     int32_t result;
+//     int tableSectionId = 0x0000;
+//     int tableId = 0x00;
+//     /* Set filter to demux */
+//     result = Demux_Set_Filter(handles->playerHandle, tableSectionId, tableId, &handles->filterHandle);
+//     ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
+    
+//     /* Register section filter callback */
+//     result = Demux_Register_Section_Filter_Callback(parsefilterCallback);
+//     ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
+
+//     while(!isPatTableParsed())
+//     {
+//     }
+//     freeFilterCallback(parsefilterCallback, handles);
+//     //Alles gut PAT is parsed
+//     return NO_ERROR;
+// }
+
+int32_t setFilterToPAT(int32_t (*filterCallback)(uint8_t*), player_handles* handles)
+{
+    int32_t result;
+    /* Set filter to demux */
+    result = Demux_Set_Filter(handles->playerHandle, 0x0000, 0x00, &handles->filterHandle);
+    ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
+    
+    /* Register section filter callback */
+    result = Demux_Register_Section_Filter_Callback(filterPATParserCallback);
+    ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
+
+    while(!isPatTableParsed())
+    {
+    }
+    freeFilterCallback(*filterCallback, handles);
+    //Alles gut PAT is parsed
+    return NO_ERROR;
+}
+
+int32_t setFilterToPMT(int32_t (*filterCallback)(uint8_t*), player_handles* handles)
+{
+    int32_t result;
+    int i;
+    pat_table* patTable = getPATTable();
+    //allocate memory for pmt tables
+    allocatePMTTables(patTable->number_of_programs);
+    printf("NUMERO OF PROGRAMO %d\n", patTable->number_of_programs);
+    for (i = 0; i < patTable->number_of_programs; i++)
+    {
+        printf("NUMERO OF PROGRAMO2 %d\n", i);
+        /* Set filter to demux */
+        result = Demux_Set_Filter(handles->playerHandle, patTable->pat_programm[i + 1].programm_map_pid, 0x02, &handles->filterHandle);
+        ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
+        
+        /* Register section filter callback */
+        result = Demux_Register_Section_Filter_Callback(filterPMTParserCallback);
+        ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
+
+        while(!isPmtTableParsed())
+        {
+        }
+        freeFilterCallback(*filterCallback, handles);
+    }
+    //Alles gut PMT are parsed
+    return NO_ERROR;
+}
+
+int32_t freeFilterCallback(int32_t (*filterCallback)(uint8_t*), player_handles* handles)
+{
+    int32_t result;
+    /* Free demux filter */
+    result = Demux_Unregister_Section_Filter_Callback(filterCallback);
+    ASSERT_TDP_RESULT(result, "Demux_Unregister_Section_Filter_Callback");
+	result = Demux_Free_Filter(handles->playerHandle, handles->filterHandle);
+    ASSERT_TDP_RESULT(result, "Demux_Free_Filter");
+
     return NO_ERROR;
 }
 
