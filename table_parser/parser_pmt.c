@@ -28,9 +28,9 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
     int i, maxNumberOfStreams, numberOfBytesStreams;
 	int32_t result;
 	int offset = 0;
-	isPMTTableParsed = FALSE;
-	pmt_table* currentPMT = &pmtTables[currentPMTTableIndex];
 	printf("PMT arrived\n");
+	isPMTTableParsed = FALSE;
+	pmt_table* currentPMT = (pmtTables + currentPMTTableIndex);
 
 	currentPMT->table_id = (uint8_t)
 		*(buffer);
@@ -66,11 +66,13 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
 	
 	maxNumberOfStreams = (currentPMT->section_length - 13) / 5;
 	numberOfBytesStreams = (currentPMT->section_length - 13);
-	currentPMT->streams = (pmt_streams*) malloc(maxNumberOfStreams * sizeof(pmt_streams));
+	printf("ladida\n");
+	// *(currentPMT->streams) = (pmt_streams*) malloc(4 * sizeof(pmt_streams));
+	printf("ladida\n");
 	
 	for (i = 0; i < 4; ++i) 
     {
-	
+		printf("PARSING PMT\n");
 		currentPMT->streams[i].stream_type = (uint8_t) 
 			*(buffer + 12 + i * 5 + offset);
 			
@@ -80,16 +82,18 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
 		currentPMT->streams[i].ES_info_length = (uint16_t)
 			((*(buffer + 15 + i * 5 + offset) << 8) + *(buffer + 16 + i * 5 + offset)) & 0x0FFF;
 			
-		offset += (currentPMT->streams + i)->ES_info_length;
-		numberOfBytesStreams -= 5 - (currentPMT->streams + i)->ES_info_length;
+		offset += currentPMT->streams[i].ES_info_length;
+		numberOfBytesStreams -= 5 - currentPMT->streams[i].ES_info_length;
 		if (numberOfBytesStreams == 0)
         {
             break;
         }
-		printf("stream type: %d\n", (currentPMT->streams + i)->stream_type);
-		printf("elementary PID: %d\n", (currentPMT->streams + i)->elementary_PID);
-		printf("ES info length: %d\n\n", (currentPMT->streams + i)->ES_info_length);
+		printf("stream type: %d\n", currentPMT->streams[i].stream_type);
+		printf("elementary PID: %d\n", currentPMT->streams[i].elementary_PID);
+		printf("ES info length: %d\n\n", currentPMT->streams[i].ES_info_length);
     }
+	printf("Finished parsing one pmt\n");
+	currentPMTTableIndex++;
 	isPMTTableParsed = TRUE;
     return NO_ERROR;
 }
@@ -99,12 +103,18 @@ int isPmtTableParsed()
 	return isPMTTableParsed;
 }
 
-pmt_table* getPMTTables()
+pmt_table* getPMTTable(int32_t channelNumber)
 {
-	return pmtTables;
+	return &pmtTables[channelNumber];
 }
 
 void allocatePMTTables(int number_of_programs)
 {
-    pmtTables = (pmt_table*) malloc(number_of_programs * sizeof(pmt_table));
+    // pmtTables = (pmt_table*) malloc(number_of_programs * sizeof(pmt_table));
+	pmtTables = (pmt_table*) malloc(number_of_programs * sizeof(pmt_table*));
+}
+
+void setPMTIsNotParsed()
+{
+	isPMTTableParsed = FALSE;
 }

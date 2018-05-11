@@ -37,6 +37,7 @@ all: $(TARGET)
 SRCS += ./init_configuration/reminder_node.c ./init_configuration/init_configuration.c \
 		./player_tuner/player_tuner.c \
 		./table_parser/parser_pat.c ./table_parser/parser_pmt.c \
+		./remote/remote.c \
 		./main.c
 
 OBJS = main.o reminder_node.o init_configuration.o

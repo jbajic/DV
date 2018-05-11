@@ -44,13 +44,13 @@ enum CONFIG_KEYS {
 
 typedef struct { char* key; enum CONFIG_KEYS val; } t_symstruct;
 
-static t_symstruct lookuptable[] = {
+static t_symstruct configLookuptable[] = {
     {"frequency", FREQUENCY_KEY}, {"bandwidth", BANDWIDTH_KEY}, {"module", MODULE_KEY}, 
     {"apid", APID_KEY}, {"vpid", VPID_KEY}, {"atype", ATYPE_KEY}, {"vtype", VTYPE_KEY}, 
     {"time", TIME_KEY}, {"channel_index", CHANNEL_INDEX_KEY}
 };
 
-#define NKEYS (sizeof (lookuptable) / sizeof (t_symstruct))
+#define NKEYS (sizeof (configLookuptable) / sizeof (t_symstruct))
 
 typedef struct init_service
 {

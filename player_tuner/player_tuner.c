@@ -31,7 +31,7 @@ static inline void textColor(int32_t attr, int32_t fg, int32_t bg)
 static pthread_cond_t statusCondition = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t statusMutex = PTHREAD_MUTEX_INITIALIZER;
 
-int32_t tunerInitialization(config_parameters* config)
+int32_t initTuner(config_parameters* config)
 {
     int32_t result;
     struct timespec lockStatusWaitTime;
@@ -53,7 +53,7 @@ int32_t tunerInitialization(config_parameters* config)
     ASSERT_TDP_RESULT(result, "Tuner_Lock_To_Frequency");
     
     pthread_mutex_lock(&statusMutex);
-    if(ETIMEDOUT == pthread_cond_timedwait(&statusCondition, &statusMutex, &lockStatusWaitTime))
+    if (ETIMEDOUT == pthread_cond_timedwait(&statusCondition, &statusMutex, &lockStatusWaitTime))
     {
         printf("\n\nLock timeout exceeded!\n\n");
         return -1;
@@ -68,6 +68,7 @@ int32_t startPlayer(player_handles* handles)
     int32_t result;
     handles->playerHandle = 0;
     handles->sourceHandle = 0;
+    handles->filterHandle = 0;
     handles->videoStreamHandle = 0;
     handles->audioStreamHandle = 0;
 
@@ -83,33 +84,9 @@ int32_t startPlayer(player_handles* handles)
 
 int32_t setupData(player_handles* player_handles)
 {
-    // int patParsed = FALSE;
-    // pthread_t patParserId;
-    // pthread_create(&patParserId, NULL, &setFilterToPAT,
     setFilterToPAT(filterPATParserCallback, player_handles);
     setFilterToPMT(filterPMTParserCallback, player_handles);
 }
-
-// int32_t parseTable(int32_t (*parsefilterCallback)(uint8_t*), player_handles* handles)
-// {
-//     int32_t result;
-//     int tableSectionId = 0x0000;
-//     int tableId = 0x00;
-//     /* Set filter to demux */
-//     result = Demux_Set_Filter(handles->playerHandle, tableSectionId, tableId, &handles->filterHandle);
-//     ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
-    
-//     /* Register section filter callback */
-//     result = Demux_Register_Section_Filter_Callback(parsefilterCallback);
-//     ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
-
-//     while(!isPatTableParsed())
-//     {
-//     }
-//     freeFilterCallback(parsefilterCallback, handles);
-//     //Alles gut PAT is parsed
-//     return NO_ERROR;
-// }
 
 int32_t setFilterToPAT(int32_t (*filterCallback)(uint8_t*), player_handles* handles)
 {
@@ -119,13 +96,15 @@ int32_t setFilterToPAT(int32_t (*filterCallback)(uint8_t*), player_handles* hand
     ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
     
     /* Register section filter callback */
-    result = Demux_Register_Section_Filter_Callback(filterPATParserCallback);
+    result = Demux_Register_Section_Filter_Callback(filterCallback);
     ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
 
-    while(!isPatTableParsed())
+    while (!isPatTableParsed())
     {
     }
-    freeFilterCallback(*filterCallback, handles);
+    freeFilterCallback(filterCallback, handles);
+    result = Demux_Unregister_Section_Filter_Callback(filterCallback);
+    ASSERT_TDP_RESULT(result, "Demux_Unregister_Section_Filter_Callback");
     //Alles gut PAT is parsed
     return NO_ERROR;
 }
@@ -135,25 +114,43 @@ int32_t setFilterToPMT(int32_t (*filterCallback)(uint8_t*), player_handles* hand
     int32_t result;
     int i;
     pat_table* patTable = getPATTable();
+    // pthread_t* patTableThreadsId = (pthread_t) malloc(sizeof(pthread) * patTable->numberOfPrograms);
+    /* Register section filter callback */
+    // result = Demux_Register_Section_Filter_Callback(filterPMTParserCallback);
+    // ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
+
     //allocate memory for pmt tables
+    // allocatePMTTables(2);
     allocatePMTTables(patTable->number_of_programs);
-    printf("NUMERO OF PROGRAMO %d\n", patTable->number_of_programs);
-    for (i = 0; i < patTable->number_of_programs; i++)
+    for (i = 0; i < patTable->number_of_programs - 1; i++)
     {
-        printf("NUMERO OF PROGRAMO2 %d\n", i);
+        printf("PARSING NUMERO %d\n", i);
         /* Set filter to demux */
+        printf("PROGRAMM PID %d", patTable->pat_programm[i + 1].programm_map_pid);
         result = Demux_Set_Filter(handles->playerHandle, patTable->pat_programm[i + 1].programm_map_pid, 0x02, &handles->filterHandle);
         ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
-        
+
         /* Register section filter callback */
         result = Demux_Register_Section_Filter_Callback(filterPMTParserCallback);
         ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
-
-        while(!isPmtTableParsed())
+        
+        while (!isPmtTableParsed())
         {
         }
-        freeFilterCallback(*filterCallback, handles);
+        setPMTIsNotParsed();
+        /* Unregister filter */
+        result = Demux_Unregister_Section_Filter_Callback(filterPMTParserCallback);
+        ASSERT_TDP_RESULT(result, "Demux_Unregister_Section_Filter_Callback");
+
+        /* Free filter */
+        result = Demux_Free_Filter(handles->playerHandle, handles->filterHandle);
+        ASSERT_TDP_RESULT(result, "Demux_Free_Filter");
+        // freeFilterCallback(filterPMTParserCallback, handles);
     }
+    // result = Demux_Unregister_Section_Filter_Callback(filterPMTParserCallback);
+    // ASSERT_TDP_RESULT(result, "Demux_Unregister_Section_Filter_Callback");
+
+    printf("PMT ARE PARSED\n");
     //Alles gut PMT are parsed
     return NO_ERROR;
 }
@@ -161,23 +158,48 @@ int32_t setFilterToPMT(int32_t (*filterCallback)(uint8_t*), player_handles* hand
 int32_t freeFilterCallback(int32_t (*filterCallback)(uint8_t*), player_handles* handles)
 {
     int32_t result;
-    /* Free demux filter */
-    result = Demux_Unregister_Section_Filter_Callback(filterCallback);
-    ASSERT_TDP_RESULT(result, "Demux_Unregister_Section_Filter_Callback");
+    printf("PMT ARE freeFilterCallback\n");
+
+   
+    printf("PMT ARE freeFilterCallback2\n");
+
 	result = Demux_Free_Filter(handles->playerHandle, handles->filterHandle);
     ASSERT_TDP_RESULT(result, "Demux_Free_Filter");
+    printf("PMT ARE freeFilterCallback3\n");
 
     return NO_ERROR;
 }
 
-int32_t createStream(player_handles* handles)
+int32_t createStream(player_handles* handles, config_parameters* config)
 {
     int32_t result;
+    printf("VPID %d APID %d VTYPE %d ATYPE %d\n", config->service.vpid, config->service.apid, VIDEO_TYPE_MPEG2, config->service.atype);
     result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 101, VIDEO_TYPE_MPEG2, &handles->videoStreamHandle);
-    ASSERT_TDP_RESULT(result, "Player_Stream_Create");
+    ASSERT_TDP_RESULT(result, "Player_Stream_Video_Create");
 
 	result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 103, AUDIO_TYPE_MPEG_AUDIO, &handles->audioStreamHandle);
-    ASSERT_TDP_RESULT(result, "Player_Stream_Create");
+    ASSERT_TDP_RESULT(result, "Player_Stream_Audio_Create");
+
+    return NO_ERROR;
+}
+
+int32_t changeStream(player_handles* handles, int32_t channelNumber)
+{
+    int32_t result;
+    removeStream(handles);
+    printf("CHANGING STREAM\n");
+    pmt_table* currentPmt = getPMTTable(channelNumber);
+    printf("CHANGING STEREA\n");
+    printf("video PID %d, stream %d\n", currentPmt->streams[0].elementary_PID, currentPmt->streams[0].stream_type);
+   	printf("audio PID %d, stream %d\n", currentPmt->streams[2].elementary_PID, currentPmt->streams[2].stream_type);
+
+    result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
+        currentPmt->streams[0].elementary_PID, currentPmt->streams[0].elementary_PID, &handles->videoStreamHandle);
+    ASSERT_TDP_RESULT(result, "Player_Stream_Video_Change");
+
+	result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
+        currentPmt->streams[2].elementary_PID, currentPmt->streams[2].elementary_PID, &handles->audioStreamHandle);
+    ASSERT_TDP_RESULT(result, "Player_Stream_Audio_Change");
 
     return NO_ERROR;
 }
@@ -226,7 +248,7 @@ int32_t tunerDeinitialization()
 
 int32_t myPrivateTunerStatusCallback(t_LockStatus status)
 {
-    if(status == STATUS_LOCKED)
+    if (status == STATUS_LOCKED)
     {
         pthread_mutex_lock(&statusMutex);
         pthread_cond_signal(&statusCondition);

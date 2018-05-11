@@ -42,16 +42,19 @@
 typedef struct _player_handles {
     uint32_t playerHandle;
     uint32_t sourceHandle;
+    uint32_t filterHandle;
     uint32_t videoStreamHandle;
     uint32_t audioStreamHandle;
-    uint32_t filterHandle;
 } player_handles;
 
-int32_t tunerInitialization(config_parameters*);
+
+int32_t initTuner(config_parameters*);
 
 int32_t startPlayer(player_handles*);
 
-int32_t createStream(player_handles*);
+int32_t createStream(player_handles*, config_parameters*);
+
+int32_t changeStream(player_handles* handles, int32_t channelNumber);
 
 int32_t setupData(player_handles*);
 

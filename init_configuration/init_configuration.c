@@ -24,7 +24,7 @@ static int keyFromString(char* key)
     int i;
     for (i = 0; i < NKEYS; i++)
     {
-        t_symstruct *sym = (lookuptable + i);
+        t_symstruct *sym = (configLookuptable + i);
         if (strcmp(sym->key, key) == 0)
         {
             return sym->val;
@@ -85,9 +85,9 @@ int analyzeWord(char* word, FILE** filePointer, config_parameters* config)
         }
         case ATYPE_KEY:
         {
-            if (strcmp("mpeg2", value) == 0)
+            if (strcmp("ac3", value) == 0)
             {
-                config->service.atype = VIDEO_TYPE_MPEG2;
+                config->service.atype = AUDIO_TYPE_DOLBY_AC3;
             }
             else 
             {
@@ -97,9 +97,9 @@ int analyzeWord(char* word, FILE** filePointer, config_parameters* config)
         }
         case VTYPE_KEY:
         {
-            if (strcmp("ac3", value) == 0)
+            if (strcmp("mpeg2", value) == 0)
             {
-                config->service.vtype = AUDIO_TYPE_DOLBY_AC3;
+                config->service.vtype = VIDEO_TYPE_MPEG2;
             }
             else 
             {

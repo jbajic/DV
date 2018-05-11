@@ -9,21 +9,27 @@ uint32_t main(int argc, char** argv)
         return ERROR;
     }
 	config_parameters* config = loadFile(&argv[1]);
-    tunerInitialization(config);
+    initTuner(config);
 
     startPlayer(handles);
 
+    createStream(handles, config);
+
     setupData(handles);
 
-    createStream(handles);
+    startRemote(handles);
 
     fflush(stdin);
     getchar();
-
-
+    // testConfigPrintf(config);
     removeStream(handles);
+
     stopPlayer(handles);
+
     tunerDeinitialization();
+
+    free(handles);
+    
     freeConfig(config);
     
     return NO_ERROR;
