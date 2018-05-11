@@ -50,4 +50,6 @@ pmt_table* getPMTTables();
 
 void allocatePMTTables(int);
 
+void setPmtTableParsedFalse();
+
 #endif

@@ -138,7 +138,7 @@ int32_t setFilterToPMT(int32_t (*filterCallback)(uint8_t*), player_handles* hand
     //allocate memory for pmt tables
     allocatePMTTables(patTable->number_of_programs);
     printf("NUMERO OF PROGRAMO %d\n", patTable->number_of_programs);
-    for (i = 0; i < patTable->number_of_programs; i++)
+    for (i = 0; i < patTable->number_of_programs - 1; i++)
     {
         printf("NUMERO OF PROGRAMO2 %d\n", i);
         /* Set filter to demux */
@@ -152,8 +152,10 @@ int32_t setFilterToPMT(int32_t (*filterCallback)(uint8_t*), player_handles* hand
         while(!isPmtTableParsed())
         {
         }
-        freeFilterCallback(*filterCallback, handles);
+        freeFilterCallback(filterCallback, handles);
+        setPmtTableParsedFalse();
     }
+    printf("Alles parsed\n");
     //Alles gut PMT are parsed
     return NO_ERROR;
 }

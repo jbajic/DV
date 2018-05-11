@@ -66,7 +66,7 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
 	
 	maxNumberOfStreams = (currentPMT->section_length - 13) / 5;
 	numberOfBytesStreams = (currentPMT->section_length - 13);
-	currentPMT->streams = (pmt_streams*) malloc(maxNumberOfStreams * sizeof(pmt_streams));
+	// currentPMT->streams = (pmt_streams*) malloc(maxNumberOfStreams * sizeof(pmt_streams));
 	
 	for (i = 0; i < 4; ++i) 
     {
@@ -90,6 +90,7 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
 		printf("elementary PID: %d\n", (currentPMT->streams + i)->elementary_PID);
 		printf("ES info length: %d\n\n", (currentPMT->streams + i)->ES_info_length);
     }
+	currentPMTTableIndex++;
 	isPMTTableParsed = TRUE;
     return NO_ERROR;
 }
@@ -97,6 +98,11 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
 int isPmtTableParsed()
 {
 	return isPMTTableParsed;
+}
+
+void setPmtTableParsedFalse()
+{
+	isPMTTableParsed = FALSE;
 }
 
 pmt_table* getPMTTables()
