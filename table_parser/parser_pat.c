@@ -60,19 +60,19 @@ int32_t filterPATParserCallback(uint8_t* buffer)
 
 		(patTable.pat_programm + i)->programm_map_pid = (uint16_t)
 			((*(buffer + 10 +(i*4)) << 8) + *(buffer + 11 + (i * 4))) & 0x1FFF;
-		printf("programm_number: %d\n", (patTable.pat_programm + i)->programm_number);
-		printf("programm_map_pid: %d\n\n", (patTable.pat_programm + i)->programm_map_pid);
+		// printf("programm_number: %d\n", (patTable.pat_programm + i)->programm_number);
+		// printf("programm_map_pid: %d\n\n", (patTable.pat_programm + i)->programm_map_pid);
 	}
 
-	printf("table Id: %d\n", patTable.pat_header.table_id);
-	printf("section_syntax_indicator: %d\n", patTable.pat_header.section_syntax_indicator);
-	printf("section length: %d\n", patTable.pat_header.section_length);
-	printf("transport_stream_id: %d\n", patTable.pat_header.transport_stream_id);
-	printf("version_number: %d\n", patTable.pat_header.version_number);
-	printf("current_next_indicator: %d\n", patTable.current_next_indicator);
-	printf("section_number: %d\n", patTable.section_number);
-	printf("last_section_number: %d\n", patTable.last_section_number);
-	printf("broj bajtova u foru: %d\n", patTable.pat_header.section_length - 5 - 4);
+	// printf("table Id: %d\n", patTable.pat_header.table_id);
+	// printf("section_syntax_indicator: %d\n", patTable.pat_header.section_syntax_indicator);
+	// printf("section length: %d\n", patTable.pat_header.section_length);
+	// printf("transport_stream_id: %d\n", patTable.pat_header.transport_stream_id);
+	// printf("version_number: %d\n", patTable.pat_header.version_number);
+	// printf("current_next_indicator: %d\n", patTable.current_next_indicator);
+	// printf("section_number: %d\n", patTable.section_number);
+	// printf("last_section_number: %d\n", patTable.last_section_number);
+	// printf("broj bajtova u foru: %d\n", patTable.pat_header.section_length - 5 - 4);
 
 	isPATParsed = TRUE;
     return 0;

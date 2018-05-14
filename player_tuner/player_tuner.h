@@ -38,6 +38,7 @@
                                 }
 #define TABLE_PAT_ID 0x00
 #define TABLE_PMT_ID 0x02
+#define FREQUENCY_MGH 1000000
 
 typedef struct _player_handles {
     uint32_t playerHandle;
@@ -51,7 +52,7 @@ int32_t tunerInitialization(config_parameters*);
 
 int32_t startPlayer(player_handles*);
 
-int32_t createStream(player_handles*);
+int32_t createStream(player_handles*, config_parameters*);
 
 int32_t changeStream(player_handles*, int32_t);
 

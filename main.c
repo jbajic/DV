@@ -13,10 +13,10 @@ int32_t main(int argc, char** argv)
 
     startPlayer(handles);
     
-    createStream(handles);
+    createStream(handles, config);
 
     setupData(handles);
-    printf("playerHandle %d sourceHandle %d\n", handles->playerHandle, handles->sourceHandle);
+
     startRemote(handles);
 
     removeStream(handles);

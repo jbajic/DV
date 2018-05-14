@@ -49,7 +49,7 @@ int32_t tunerInitialization(config_parameters* config)
     ASSERT_TDP_RESULT(result, "Tuner_Register_Status_Callback");
     
     /* Lock to frequency */
-    result = Tuner_Lock_To_Frequency(818000000, 8, DVB_T);
+    result = Tuner_Lock_To_Frequency(config->frequency * FREQUENCY_MGH, config->bandwidth, config->module);
     ASSERT_TDP_RESULT(result, "Tuner_Lock_To_Frequency");
     
     pthread_mutex_lock(&statusMutex);
@@ -138,8 +138,6 @@ int32_t setFilterToPMT(int32_t (*filterCallback)(uint8_t*), player_handles* hand
         while(!isPmtTableParsed())
         {
         }
-        // pthread_create(&freeFilterCallbackId, NULL, freeFilterCallback, handles);
-        // pthread_join(freeFilterCallbackId, NULL);
         freeFilterCallback(filterCallback, handles);
         setPmtTableParsedFalse();
     }
@@ -160,13 +158,15 @@ int32_t freeFilterCallback(int32_t (*filterCallback)(uint8_t*), player_handles* 
     return NO_ERROR;
 }
 
-int32_t createStream(player_handles* handles)
+int32_t createStream(player_handles* handles, config_parameters* config)
 {
     int32_t result;
-    result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 101, VIDEO_TYPE_MPEG2, &handles->videoStreamHandle);
+    printf("Create: vpid %d vtype %d\n", config->service.vpid, config->service.vtype);
+    printf("Create: apid %d atype %d\n", config->service.apid, config->service.atype);
+    result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, config->service.vpid, getStreamType(config->service.vtype), &handles->videoStreamHandle);
     ASSERT_TDP_RESULT(result, "Player_Stream_Create");
 
-	result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 103, AUDIO_TYPE_MPEG_AUDIO, &handles->audioStreamHandle);
+	result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, config->service.apid, getStreamType(config->service.atype), &handles->audioStreamHandle);
     ASSERT_TDP_RESULT(result, "Player_Stream_Create");
 
     return NO_ERROR;

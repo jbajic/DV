@@ -19,20 +19,30 @@
 *****************************************************************************/
 #include "init_configuration.h"
 
-static t_symstruct lookuptable[] = {
+static t_symstruct configKeysLookupTable[] = {
     {"frequency", FREQUENCY_KEY}, {"bandwidth", BANDWIDTH_KEY}, {"module", MODULE_KEY}, 
     {"apid", APID_KEY}, {"vpid", VPID_KEY}, {"atype", ATYPE_KEY}, {"vtype", VTYPE_KEY}, 
     {"time", TIME_KEY}, {"channel_index", CHANNEL_INDEX_KEY}
 };
 
-#define NKEYS (sizeof (lookuptable) / sizeof (t_symstruct))
+static t_symstruct streamTypesLookUpTable[] = {
+    {"mpeg2", stream_video_h262}, {"ac3", stream_audio}, {"audio", stream_audio}
+};
 
-static int32_t keyFromString(char* key)
+static t_symstruct modulesLookUpTable[] = {
+    {"DVB-T", DVB_T}, {"DVB-T2", DVB_T2}
+};
+
+#define N_KEY_CONFIG_TABLE (sizeof (configKeysLookupTable) / sizeof (t_symstruct))
+#define N_KEY_STREAM_TYPE_TABLE (sizeof (streamTypesLookUpTable) / sizeof (t_symstruct))
+#define N_KEY_MODULES_TABLE (sizeof (modulesLookUpTable) / sizeof (t_symstruct))
+
+static int32_t keyFromString(char* key, t_symstruct* table, int32_t numberOfValues)
 {
-    int i;
-    for (i = 0; i < NKEYS; i++)
+    int32_t i;
+    for (i = 0; i < numberOfValues; i++)
     {
-        t_symstruct *sym = (lookuptable + i);
+        t_symstruct* sym = (table + i);
         if (strcmp(sym->key, key) == 0)
         {
             return sym->val;
@@ -53,7 +63,7 @@ int32_t analyzeWord(char* word, FILE** filePointer, config_parameters* config)
         valueCounter++;
     }
     value[valueCounter] = '\0';
-    switch (keyFromString(word))
+    switch (keyFromString(word, configKeysLookupTable, N_KEY_CONFIG_TABLE))
     {
         case FREQUENCY_KEY:
         {
@@ -67,18 +77,7 @@ int32_t analyzeWord(char* word, FILE** filePointer, config_parameters* config)
         }
         case MODULE_KEY:
         {
-            if (strcmp("DVB_T", value) == 0)
-            {
-                config->module = DVB_T;
-            }
-            else if (strcmp("DVB_T2", value) == 0)
-            {
-                config->module = DVB_T;
-            }
-            else
-            {
-                return PARSE_ERROR;
-            }
+            config->module = keyFromString(value, modulesLookUpTable, N_KEY_MODULES_TABLE);
             break;
         }
         case APID_KEY:
@@ -93,26 +92,12 @@ int32_t analyzeWord(char* word, FILE** filePointer, config_parameters* config)
         }
         case ATYPE_KEY:
         {
-            if (strcmp("mpeg2", value) == 0)
-            {
-                config->service.atype = VIDEO_TYPE_MPEG2;
-            }
-            else 
-            {
-                return PARSE_ERROR;
-            }
+            config->service.atype = keyFromString(value, streamTypesLookUpTable, N_KEY_STREAM_TYPE_TABLE);
             break;
         }
         case VTYPE_KEY:
         {
-            if (strcmp("ac3", value) == 0)
-            {
-                config->service.vtype = AUDIO_TYPE_DOLBY_AC3;
-            }
-            else 
-            {
-                return PARSE_ERROR;
-            }
+            config->service.vtype = keyFromString(value, streamTypesLookUpTable, N_KEY_STREAM_TYPE_TABLE);
             break;
         }
         case TIME_KEY:
@@ -188,7 +173,6 @@ config_parameters* loadFile(char** file_path)
     }
     
     fclose(filePointer);
-    printf("File Path: %s\n", *(file_path));
     return config;
 }
 
