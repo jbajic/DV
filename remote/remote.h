@@ -30,8 +30,8 @@
 #define NUM_EVENTS  5
 
 typedef struct _remote_loop_args {
-    struct input_event** eventBuf;
-    int32_t* inputFileDesc;
+    struct input_event* eventBuf;
+    int32_t inputFileDesc;
     player_handles* handles;
 } remote_loop_args;
 

@@ -28,7 +28,7 @@ LIBS := $(LIBS_PATH) -ltdp -ldirectfb -ldirect -lfusion -lrt
 
 LIBS += $(LIBS_PATH) -lOSAL	-lshm -lPEAgent       
 
-CFLAGS += -D__LINUX__ -O0 -Wno-psabi --sysroot=$(SYSROOT)
+CFLAGS += -D__LINUX__ -O0 -Wall -Wno-psabi --sysroot=$(SYSROOT)
 
 CXXFLAGS = $(CFLAGS)
 
@@ -36,6 +36,7 @@ all: $(TARGET)
 
 SRCS += ./init_configuration/reminder_node.c ./init_configuration/init_configuration.c \
 		./player_tuner/player_tuner.c \
+		./remote/remote.c \
 		./table_parser/parser_pat.c ./table_parser/parser_pmt.c \
 		./main.c
 

@@ -46,7 +46,7 @@ int32_t filterPMTParserCallback(uint8_t*);
 
 int isPmtTableParsed();
 
-pmt_table* getPMTTables();
+pmt_table* getPMTTable(int32_t channelNumber);
 
 void allocatePMTTables(int);
 

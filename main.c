@@ -1,6 +1,6 @@
 #include "main.h"
 
-uint32_t main(int argc, char** argv)
+int32_t main(int argc, char** argv)
 {
     player_handles* handles = (player_handles*) malloc(sizeof(player_handles));
     if (argc <= 1) 
@@ -12,14 +12,12 @@ uint32_t main(int argc, char** argv)
     tunerInitialization(config);
 
     startPlayer(handles);
-
-    setupData(handles);
-
+    
     createStream(handles);
 
-    fflush(stdin);
-    getchar();
-
+    setupData(handles);
+    printf("playerHandle %d sourceHandle %d\n", handles->playerHandle, handles->sourceHandle);
+    startRemote(handles);
 
     removeStream(handles);
     stopPlayer(handles);

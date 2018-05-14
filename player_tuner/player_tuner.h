@@ -20,7 +20,7 @@
 #ifndef PLAYER_TUNER_H
 #define PLAYER_TUNER_H
 
-#include <time.h>
+#include <sys/time.h>
 #include <pthread.h>
 #include "errno.h"
 
@@ -53,6 +53,8 @@ int32_t startPlayer(player_handles*);
 
 int32_t createStream(player_handles*);
 
+int32_t changeStream(player_handles*, int32_t);
+
 int32_t setupData(player_handles*);
 
 int32_t setFilterToPAT(int32_t (*filterCallback)(uint8_t*), player_handles*);
@@ -68,5 +70,9 @@ int32_t stopPlayer(player_handles*);
 int32_t tunerDeinitialization();
 
 int32_t myPrivateTunerStatusCallback(t_LockStatus);
+
+void* threadPATParse();
+
+int8_t getStreamType(uint8_t);
 
 #endif

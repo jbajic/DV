@@ -26,7 +26,6 @@ static int currentPMTTableIndex = 0;
 int32_t filterPMTParserCallback(uint8_t* buffer)
 {
     int i, maxNumberOfStreams, numberOfBytesStreams;
-	int32_t result;
 	int offset = 0;
 	isPMTTableParsed = FALSE;
 	pmt_table* currentPMT = &pmtTables[currentPMTTableIndex];
@@ -42,7 +41,7 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
 		((*(buffer + 1) << 8) + *(buffer + 2)) & 0x0FFF;
 		
 	currentPMT->programm_number = (uint16_t) 
-		(*(buffer + 3) << 8 + *(buffer + 4));
+		((*(buffer + 3) << 8) + *(buffer + 4));
 		
 	currentPMT->version_number = (uint8_t)
 		(*(buffer + 5) & 0x3D);
@@ -60,7 +59,7 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
 		(((*(buffer + 8) << 8) + *(buffer + 9)) & 0x1FFF);
 		
 	currentPMT->program_info_length = (uint16_t)
-		(*(buffer + 10) << 8 + *(buffer + 11)) & 0x0FFF;
+		((*(buffer + 10) << 8) + *(buffer + 11)) & 0x0FFF;
 	
 	currentPMT->streams = (pmt_streams*) malloc(4 * sizeof(pmt_streams));
 	
@@ -105,9 +104,9 @@ void setPmtTableParsedFalse()
 	isPMTTableParsed = FALSE;
 }
 
-pmt_table* getPMTTables()
+pmt_table* getPMTTable(int32_t channelNumber)
 {
-	return pmtTables;
+	return &pmtTables[channelNumber];
 }
 
 void allocatePMTTables(int number_of_programs)

@@ -19,7 +19,15 @@
 *****************************************************************************/
 #include "init_configuration.h"
 
-static int keyFromString(char* key)
+static t_symstruct lookuptable[] = {
+    {"frequency", FREQUENCY_KEY}, {"bandwidth", BANDWIDTH_KEY}, {"module", MODULE_KEY}, 
+    {"apid", APID_KEY}, {"vpid", VPID_KEY}, {"atype", ATYPE_KEY}, {"vtype", VTYPE_KEY}, 
+    {"time", TIME_KEY}, {"channel_index", CHANNEL_INDEX_KEY}
+};
+
+#define NKEYS (sizeof (lookuptable) / sizeof (t_symstruct))
+
+static int32_t keyFromString(char* key)
 {
     int i;
     for (i = 0; i < NKEYS; i++)
@@ -33,7 +41,7 @@ static int keyFromString(char* key)
     return NON_EXISTENT_KEY;
 }
 
-int analyzeWord(char* word, FILE** filePointer, config_parameters* config)
+int32_t analyzeWord(char* word, FILE** filePointer, config_parameters* config)
 {
     int character;
     char* value = (char*) malloc(sizeof (char) * MAX_NUMBER_OF_ELEMENTS);
@@ -118,9 +126,10 @@ int analyzeWord(char* word, FILE** filePointer, config_parameters* config)
             break;
         }
     }
+    return NO_ERROR;
 }
 
-static int isNonValueKeyWord(char* word)
+static int32_t isNonValueKeyWord(char* word)
 {
     return strcmp("config", word) == 0 || strcmp("reminder", word) == 0 || strcmp("init_service", word) == 0;
 }
@@ -183,9 +192,10 @@ config_parameters* loadFile(char** file_path)
     return config;
 }
 
-int freeConfig(config_parameters* config)
+int32_t freeConfig(config_parameters* config)
 {
     free(config);
+    return NO_ERROR;
 }
 
 void testConfigPrintf(config_parameters* config)

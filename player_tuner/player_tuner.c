@@ -83,33 +83,19 @@ int32_t startPlayer(player_handles* handles)
 
 int32_t setupData(player_handles* player_handles)
 {
-    // int patParsed = FALSE;
-    // pthread_t patParserId;
-    // pthread_create(&patParserId, NULL, &setFilterToPAT,
-    setFilterToPAT(filterPATParserCallback, player_handles);
+    pthread_t patParserId;
+    pthread_create(&patParserId, NULL, threadPATParse, (void*) player_handles);
+    pthread_join(patParserId, NULL);
     setFilterToPMT(filterPMTParserCallback, player_handles);
+
+    return NO_ERROR;
 }
 
-// int32_t parseTable(int32_t (*parsefilterCallback)(uint8_t*), player_handles* handles)
-// {
-//     int32_t result;
-//     int tableSectionId = 0x0000;
-//     int tableId = 0x00;
-//     /* Set filter to demux */
-//     result = Demux_Set_Filter(handles->playerHandle, tableSectionId, tableId, &handles->filterHandle);
-//     ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
-    
-//     /* Register section filter callback */
-//     result = Demux_Register_Section_Filter_Callback(parsefilterCallback);
-//     ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
-
-//     while(!isPatTableParsed())
-//     {
-//     }
-//     freeFilterCallback(parsefilterCallback, handles);
-//     //Alles gut PAT is parsed
-//     return NO_ERROR;
-// }
+void* threadPATParse(void* handles)
+{
+    setFilterToPAT(filterPATParserCallback, (player_handles*) handles);
+    return NO_ERROR;
+}
 
 int32_t setFilterToPAT(int32_t (*filterCallback)(uint8_t*), player_handles* handles)
 {
@@ -152,6 +138,8 @@ int32_t setFilterToPMT(int32_t (*filterCallback)(uint8_t*), player_handles* hand
         while(!isPmtTableParsed())
         {
         }
+        // pthread_create(&freeFilterCallbackId, NULL, freeFilterCallback, handles);
+        // pthread_join(freeFilterCallbackId, NULL);
         freeFilterCallback(filterCallback, handles);
         setPmtTableParsedFalse();
     }
@@ -168,6 +156,7 @@ int32_t freeFilterCallback(int32_t (*filterCallback)(uint8_t*), player_handles* 
     ASSERT_TDP_RESULT(result, "Demux_Unregister_Section_Filter_Callback");
 	result = Demux_Free_Filter(handles->playerHandle, handles->filterHandle);
     ASSERT_TDP_RESULT(result, "Demux_Free_Filter");
+    printf("playerHandle %d sourceHandle %d\n", handles->playerHandle, handles->sourceHandle);
 
     return NO_ERROR;
 }
@@ -184,16 +173,41 @@ int32_t createStream(player_handles* handles)
     return NO_ERROR;
 }
 
+int32_t changeStream(player_handles* handles, int32_t channelNumber)
+{
+    int32_t result;
+    printf("CHANGING STREAM\n");
+    printf("playerHandle %d sourceHandle %d\n", handles->playerHandle, handles->sourceHandle);
+    removeStream(handles);
+    pmt_table* currentPmt = getPMTTable(channelNumber);
+    printf("CHANGING STEREA\n");
+    printf("video PID %d, stream %d streamhandle %d\n", currentPmt->streams[0].elementary_PID, currentPmt->streams[0].stream_type, handles->videoStreamHandle);
+   	printf("audio PID %d, stream %d streamhandle %d\n", currentPmt->streams[2].elementary_PID, currentPmt->streams[2].stream_type, handles->videoStreamHandle);
+
+    result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
+        currentPmt->streams[0].elementary_PID, getStreamType(currentPmt->streams[0].stream_type), &handles->videoStreamHandle);
+    ASSERT_TDP_RESULT(result, "Player_Stream_Video_Change");
+
+	result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
+        currentPmt->streams[2].elementary_PID, getStreamType(currentPmt->streams[2].stream_type), &handles->audioStreamHandle);
+    ASSERT_TDP_RESULT(result, "Player_Stream_Audio_Change");
+
+    return NO_ERROR;
+}
+
 int32_t removeStream(player_handles* handles)
 {
     int32_t result;
+    printf("removing playerHandle %d sourceHandle %d\n", handles->playerHandle, handles->sourceHandle);
     if (handles->videoStreamHandle != 0) 
     {
+        printf("removing video\n");
         result = Player_Stream_Remove(handles->playerHandle, handles->sourceHandle, handles->videoStreamHandle);
         ASSERT_TDP_RESULT(result, "Player_Stream_Remove1");
 	}
 	if (handles->audioStreamHandle != 0) 
     {
+        printf("removing audio\n");
 		result = Player_Stream_Remove(handles->playerHandle, handles->sourceHandle, handles->audioStreamHandle);
 		ASSERT_TDP_RESULT(result, "Player_Stream_Remove2");	
 	}
@@ -240,4 +254,19 @@ int32_t myPrivateTunerStatusCallback(t_LockStatus status)
         printf("\n\n\tCALLBACK NOT LOCKED\n\n");
     }
     return 0;
+}
+
+int8_t getStreamType(uint8_t streamType)
+{
+	switch(streamType)
+	{
+		case stream_video_h262:
+			return VIDEO_TYPE_MPEG2;
+		case stream_audio:
+			return AUDIO_TYPE_MPEG_AUDIO;
+		case stream_private_sections:
+			return VIDEO_TYPE_MPEG2;
+		default:
+			return 0;
+	}
 }

@@ -24,7 +24,7 @@ static int isPATParsed = FALSE;
 
 int32_t filterPATParserCallback(uint8_t* buffer)
 {
-    int numberOfPrograms, i;
+    int i;
     printf("\n\nSection arrived!!!\n\n");
 	patTable.pat_header.table_id = (uint8_t)
 		*(buffer);
@@ -51,15 +51,15 @@ int32_t filterPATParserCallback(uint8_t* buffer)
 		*(buffer + 7);
 
 	patTable.number_of_programs = (patTable.pat_header.section_length - 5 - 4) / 4;
-	patTable.pat_programm = (pat_programm*) malloc(numberOfPrograms * sizeof(pat_programm));
+	patTable.pat_programm = (pat_programm*) malloc(patTable.number_of_programs * sizeof(pat_programm));
 
-	for (i = 0; i < numberOfPrograms; ++i) 
+	for (i = 0; i < patTable.number_of_programs; ++i) 
 	{
 		(patTable.pat_programm + i)->programm_number = (uint16_t)
 			(*(buffer + 8 +(i * 4)) << 8) + *(buffer + 9 + (i * 4));
 
 		(patTable.pat_programm + i)->programm_map_pid = (uint16_t)
-			(*(buffer + 10 +(i*4)) << 8) + *(buffer + 11 + (i * 4)) & 0x1FFF;
+			((*(buffer + 10 +(i*4)) << 8) + *(buffer + 11 + (i * 4))) & 0x1FFF;
 		printf("programm_number: %d\n", (patTable.pat_programm + i)->programm_number);
 		printf("programm_map_pid: %d\n\n", (patTable.pat_programm + i)->programm_map_pid);
 	}
