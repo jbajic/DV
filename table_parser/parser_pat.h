@@ -40,7 +40,7 @@ typedef struct _pat_table {
 	uint8_t current_next_indicator;
 	uint8_t section_number;
 	uint8_t last_section_number;
-	uint16_t number_of_programs;
+	int32_t number_of_programs;
 	pat_programm* pat_programm;
 } pat_table;
 

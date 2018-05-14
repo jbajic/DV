@@ -72,11 +72,14 @@ int32_t startRemote(player_handles* handles)
 void* initRemoteLoop(void* args)
 {
     int32_t currentChannel = 0;
-    int32_t numberOfPrograms = 7;
+    uint32_t soundVolume;
+    uint8_t mute = FALSE;
+    int32_t numberOfPrograms = getPATTable()->number_of_programs;
     int32_t exitRemote = FALSE;
     uint32_t i;
     uint32_t eventCnt;
     remote_loop_args* remoteArgs = (remote_loop_args*) args;
+    Player_Volume_Get(remoteArgs->handles->playerHandle, &soundVolume);
 
     while(TRUE)
     {
@@ -94,16 +97,59 @@ void* initRemoteLoop(void* args)
 				switch(remoteArgs->eventBuf[i].code) {
 					case 62:
 						currentChannel++;
-						if(currentChannel < 0) currentChannel = numberOfPrograms - 2;
-						if(currentChannel >= numberOfPrograms) currentChannel = 0;
+						if (currentChannel < 0)
+                        {
+                            currentChannel = numberOfPrograms - 2;
+                        }
+						if (currentChannel >= numberOfPrograms)
+                        {
+                            currentChannel = 0;
+                        }
 						changeStream(remoteArgs->handles, currentChannel);	
 						break;
 					case 61:
 						currentChannel--;
-						if(currentChannel < 0) currentChannel = numberOfPrograms - 2;
-						if(currentChannel >= numberOfPrograms) currentChannel = 0;
+						if (currentChannel < 0)
+                        {
+                            currentChannel = numberOfPrograms - 2;
+                        }
+						if (currentChannel >= numberOfPrograms)
+                        {
+                            currentChannel = 0;
+                        }
 						changeStream(remoteArgs->handles, currentChannel);	
 						break;
+                        //volume up
+                    case 63:
+                        if (soundVolume < INT32_MAX)
+                        {
+                            soundVolume += INT32_MAX * 0.1;
+                            Player_Volume_Set(remoteArgs->handles->playerHandle, soundVolume);
+                        }
+                        mute = FALSE;
+                        break;
+                    //volume down                        
+                    case 64:
+                    if (soundVolume > 0)
+                        {
+                            soundVolume -= INT32_MAX * 0.1;
+                            Player_Volume_Set(remoteArgs->handles->playerHandle, soundVolume);
+                        }
+                        mute = FALSE;                        
+                        break;
+                    //mute
+                    case 60:
+                        if (mute)
+                        {
+                            Player_Volume_Set(remoteArgs->handles->playerHandle, soundVolume);
+                            mute = FALSE;
+                        }
+                        else
+                        {
+                            Player_Volume_Set(remoteArgs->handles->playerHandle, 0);
+                            mute = TRUE;
+                        }
+                        break;
 					case 102:
                         exitRemote = TRUE;
 						break;

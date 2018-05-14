@@ -156,7 +156,6 @@ int32_t freeFilterCallback(int32_t (*filterCallback)(uint8_t*), player_handles* 
     ASSERT_TDP_RESULT(result, "Demux_Unregister_Section_Filter_Callback");
 	result = Demux_Free_Filter(handles->playerHandle, handles->filterHandle);
     ASSERT_TDP_RESULT(result, "Demux_Free_Filter");
-    printf("playerHandle %d sourceHandle %d\n", handles->playerHandle, handles->sourceHandle);
 
     return NO_ERROR;
 }
@@ -176,13 +175,8 @@ int32_t createStream(player_handles* handles)
 int32_t changeStream(player_handles* handles, int32_t channelNumber)
 {
     int32_t result;
-    printf("CHANGING STREAM\n");
-    printf("playerHandle %d sourceHandle %d\n", handles->playerHandle, handles->sourceHandle);
     removeStream(handles);
     pmt_table* currentPmt = getPMTTable(channelNumber);
-    printf("CHANGING STEREA\n");
-    printf("video PID %d, stream %d streamhandle %d\n", currentPmt->streams[0].elementary_PID, currentPmt->streams[0].stream_type, handles->videoStreamHandle);
-   	printf("audio PID %d, stream %d streamhandle %d\n", currentPmt->streams[2].elementary_PID, currentPmt->streams[2].stream_type, handles->videoStreamHandle);
 
     result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
         currentPmt->streams[0].elementary_PID, getStreamType(currentPmt->streams[0].stream_type), &handles->videoStreamHandle);
