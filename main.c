@@ -3,16 +3,20 @@
 int32_t main(int argc, char** argv)
 {
     player_handles* handles = (player_handles*) malloc(sizeof(player_handles));
+    config_parameters* config = (config_parameters*) malloc(sizeof(config_parameters));
+    graphics* graphicsStruct = (graphics*) malloc(sizeof(graphics));
     if (argc <= 1) 
     {
         printf("No file path given!\n");
         return ERROR;
     }
-	config_parameters* config = loadFile(&argv[1]);
+    loadFile(&argv[1], config);
     tunerInitialization(config);
 
     startPlayer(handles);
     
+    initGraphics(graphicsStruct);
+
     createStream(handles, config);
 
     setupData(handles);
@@ -21,8 +25,12 @@ int32_t main(int argc, char** argv)
 
     removeStream(handles);
     stopPlayer(handles);
+    deinitGraphics(graphicsStruct);
     tunerDeinitialization();
-    freeConfig(config);
+    
+    free(config);
+    free(handles);
+    free(graphicsStruct);
     
     return NO_ERROR;
 }

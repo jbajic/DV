@@ -177,14 +177,17 @@ int32_t changeStream(player_handles* handles, int32_t channelNumber)
 {
     int32_t result;
     removeStream(handles);
-    pmt_table* currentPmt = getPMTTable(channelNumber);
+    pmt_table* currentPmt = getPMTTable(channelNumber - 1);
     result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
         currentPmt->streams[0].elementary_PID, getStreamType(currentPmt->streams[0].stream_type), &handles->videoStreamHandle);
     ASSERT_TDP_RESULT(result, "Player_Stream_Video_Change");
 
-	result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
-        currentPmt->streams[2].elementary_PID, getStreamType(currentPmt->streams[2].stream_type), &handles->audioStreamHandle);
-    ASSERT_TDP_RESULT(result, "Player_Stream_Audio_Change");
+    if (getStreamType(currentPmt->streams[2].stream_type))
+    {
+        result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
+            currentPmt->streams[2].elementary_PID, getStreamType(currentPmt->streams[2].stream_type), &handles->audioStreamHandle);
+        ASSERT_TDP_RESULT(result, "Player_Stream_Audio_Change");
+    }
 
     return NO_ERROR;
 }
@@ -219,7 +222,7 @@ int32_t stopPlayer(player_handles* handles)
     /* Deinit player */
     result = Player_Deinit(handles->playerHandle);
     ASSERT_TDP_RESULT(result, "Player_Deinit");
-    free(handles);
+    // free(handles);
 
     return NO_ERROR;
 }

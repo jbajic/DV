@@ -69,19 +69,35 @@ int32_t startRemote(player_handles* handles)
     return NO_ERROR;
 }
 
-void changeChannelNumber(void* arg)
+static void changeChannel(player_handles* handles, int32_t* currentChannel, int32_t numberOfPrograms)
+{
+    printf("Ladimotherfuckingda\n");
+    if (*currentChannel <= 0)
+    {
+        *currentChannel = numberOfPrograms - 1;
+    }
+    if (*currentChannel > numberOfPrograms - 1)
+    {
+        *currentChannel = 1;
+    }
+    printf("Changing to channel %d\n", *currentChannel);
+    changeStream(handles, *currentChannel);
+}
+
+static void changeChannelNumber(void* arg)
 {
     printf("Ladida\n");
     timer_channel_changer_args* timeArgs = (timer_channel_changer_args*) arg;
     printf("Full CHannel %d\n", timeArgs->channelNumber);
-    if (timeArgs->channelNumber > numberOfPrograms)
-    {
-        prtinf("No change\n");
-    }
-    else
-    {
-        changeStream(timeArgs->handles, timeArgs->channelNumber);
-    }
+    changeChannel(timeArgs->handles, &timeArgs->channelNumber, timeArgs->numberOfPrograms);
+    // if (timeArgs->channelNumber > timeArgs->numberOfPrograms)
+    // {
+    //     printf("No change\n");
+    // }
+    // else
+    // {
+    //     changeStream(timeArgs->handles, timeArgs->channelNumber);
+    // }
 
     // memset(&timeArgs->timerSpec, 0, sizeof(timeArgs->timerSpec));
     // timer_settime(timeArgs->timerId, 0, &timeArgs->timerSpec, &timeArgs->timerSpecOld);
@@ -102,7 +118,8 @@ void* initRemoteLoop(void* args)
     Player_Volume_Get(remoteArgs->handles->playerHandle, &soundVolume);
 
     timer_channel_changer_args timeArgs;
-    timeArgs.channelNumber = 0;
+    timeArgs.channelNumber = 1;
+    timeArgs.numberOfPrograms = numberOfPrograms;
     timeArgs.handles = remoteArgs->handles;
     int32_t timerFlags = 0;
     struct sigevent signalEvent;
@@ -158,29 +175,31 @@ void* initRemoteLoop(void* args)
 					case 62:
                     {
 						currentChannel++;
-						if (currentChannel < 0)
-                        {
-                            currentChannel = numberOfPrograms - 2;
-                        }
-						if (currentChannel >= numberOfPrograms)
-                        {
-                            currentChannel = 0;
-                        }
-						changeStream(remoteArgs->handles, currentChannel);	
+                        changeChannel(remoteArgs->handles, &currentChannel, numberOfPrograms);
+						// if (currentChannel < 0)
+                        // {
+                        //     currentChannel = numberOfPrograms - 2;
+                        // }
+						// if (currentChannel >= numberOfPrograms)
+                        // {
+                        //     currentChannel = 0;
+                        // }
+						// changeStream(remoteArgs->handles, currentChannel);	
 						break;
                     }
 					case 61:
                     {
 						currentChannel--;
-						if (currentChannel < 0)
-                        {
-                            currentChannel = numberOfPrograms - 2;
-                        }
-						if (currentChannel >= numberOfPrograms)
-                        {
-                            currentChannel = 0;
-                        }
-						changeStream(remoteArgs->handles, currentChannel);	
+                        changeChannel(remoteArgs->handles, &currentChannel, numberOfPrograms);
+						// if (currentChannel < 0)
+                        // {
+                        //     currentChannel = numberOfPrograms - 2;
+                        // }
+						// if (currentChannel >= numberOfPrograms)
+                        // {
+                        //     currentChannel = 0;
+                        // }
+						// changeStream(remoteArgs->handles, currentChannel);	
 						break;
                     }
                     case 63:

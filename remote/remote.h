@@ -41,6 +41,7 @@ typedef struct _timer_channel_changer_args
 {
     player_handles* handles;
     int32_t channelNumber;
+    int32_t numberOfPrograms;
     timer_t timerId;
     struct itimerspec timerSpec;
     struct itimerspec timerSpecOld;

@@ -79,6 +79,9 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
 		currentPMT->streams[i].ES_info_length = (uint16_t)
 			((*(buffer + 15 + i * 5 + offset) << 8) + *(buffer + 16 + i * 5 + offset)) & 0x0FFF;
 			
+		currentPMT->streams[i].isThereTeletext = (uint8_t)
+			(*(buffer + 17 + i * 5 + offset) << 8) == 0x56 ? 1 : 0;
+
 		offset += (currentPMT->streams + i)->ES_info_length;
 		numberOfBytesStreams -= 5 - (currentPMT->streams + i)->ES_info_length;
 		if (numberOfBytesStreams == 0)

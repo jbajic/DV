@@ -119,14 +119,13 @@ static int32_t isNonValueKeyWord(char* word)
     return strcmp("config", word) == 0 || strcmp("reminder", word) == 0 || strcmp("init_service", word) == 0;
 }
 
-config_parameters* loadFile(char** file_path)
+int32_t loadFile(char** file_path, config_parameters* config)
 {
     FILE* filePointer;
     int character;
     char word[100];
     int wordIndex;
     int isEnclosing = FALSE;
-    config_parameters* config = (config_parameters*) malloc(sizeof(config_parameters));
     config->headReminder = NULL;
     
     filePointer = fopen(*file_path, "r");
@@ -173,12 +172,6 @@ config_parameters* loadFile(char** file_path)
     }
     
     fclose(filePointer);
-    return config;
-}
-
-int32_t freeConfig(config_parameters* config)
-{
-    free(config);
     return NO_ERROR;
 }
 

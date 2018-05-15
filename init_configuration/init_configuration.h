@@ -87,9 +87,7 @@ typedef struct _config_parameters
     reminder* headReminder;
 } config_parameters;
 
-config_parameters* loadFile(char** file_path);
-
-int32_t freeConfig(config_parameters*);
+int32_t loadFile(char** file_path, config_parameters*);
 
 int32_t analyzeWord(char*, FILE**, config_parameters*);
 

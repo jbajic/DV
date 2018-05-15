@@ -22,5 +22,6 @@
 #include "./player_tuner/player_tuner.h"
 #include "./table_parser/parser_pat.h"
 #include "./remote/remote.h"
+#include "./graphics/graphics.h"
 
 #endif
