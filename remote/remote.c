@@ -74,7 +74,14 @@ void changeChannelNumber(void* arg)
     printf("Ladida\n");
     timer_channel_changer_args* timeArgs = (timer_channel_changer_args*) arg;
     printf("Full CHannel %d\n", timeArgs->channelNumber);
-    changeStream(timeArgs->handles, timeArgs->channelNumber);
+    if (timeArgs->channelNumber > numberOfPrograms)
+    {
+        prtinf("No change\n");
+    }
+    else
+    {
+        changeStream(timeArgs->handles, timeArgs->channelNumber);
+    }
 
     // memset(&timeArgs->timerSpec, 0, sizeof(timeArgs->timerSpec));
     // timer_settime(timeArgs->timerId, 0, &timeArgs->timerSpec, &timeArgs->timerSpecOld);
@@ -177,6 +184,7 @@ void* initRemoteLoop(void* args)
 						break;
                     }
                     case 63:
+                    {
                         if (soundVolume < INT32_MAX)
                         {
                             soundVolume += INT32_MAX * 0.1;
@@ -184,15 +192,19 @@ void* initRemoteLoop(void* args)
                         }
                         mute = FALSE;
                         break;
+                    }
                     case 64:
-                    if (soundVolume > 0)
+                    {
+                        if (soundVolume > 0)
                         {
                             soundVolume -= INT32_MAX * 0.1;
                             Player_Volume_Set(remoteArgs->handles->playerHandle, soundVolume);
                         }
                         mute = FALSE;                        
                         break;
+                    }
                     case 60:
+                    {
                         if (mute)
                         {
                             Player_Volume_Set(remoteArgs->handles->playerHandle, soundVolume);
@@ -204,9 +216,12 @@ void* initRemoteLoop(void* args)
                             mute = TRUE;
                         }
                         break;
+                    }
 					case 102:
+                    {
                         exitRemote = TRUE;
 						break;
+                    }
 				}
 			}	
         }

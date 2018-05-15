@@ -178,7 +178,6 @@ int32_t changeStream(player_handles* handles, int32_t channelNumber)
     int32_t result;
     removeStream(handles);
     pmt_table* currentPmt = getPMTTable(channelNumber);
-
     result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
         currentPmt->streams[0].elementary_PID, getStreamType(currentPmt->streams[0].stream_type), &handles->videoStreamHandle);
     ASSERT_TDP_RESULT(result, "Player_Stream_Video_Change");
