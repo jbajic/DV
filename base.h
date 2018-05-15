@@ -25,10 +25,23 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+#ifdef DEBUG
+#undef DEBUG
+#endif
+#define DEBUG 0
+
 #define ERROR 1
 #define NO_ERROR 0
 
 #define TRUE 1
 #define FALSE 0
+
+typedef struct _timer_struct
+{
+    timer_t timerId;
+    struct itimerspec timerSpec;
+    struct itimerspec timerSpecOld;
+    int32_t timerFlags;
+} timer_struct;
 
 #endif

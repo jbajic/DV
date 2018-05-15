@@ -23,7 +23,6 @@ static int32_t getKeys(int32_t count, uint8_t* buf, uint32_t* eventsRead, int32_
 {
     int32_t ret = 0;
     
-    /* read input events and put them in buffer */
     // printf("buff5: %u\n inputfile5 %d\n", *buf, inputFileDesc);
     ret = read(inputFileDesc, buf, (size_t)(count * (int) sizeof(struct input_event)));
     if (ret <= 0)
@@ -37,7 +36,7 @@ static int32_t getKeys(int32_t count, uint8_t* buf, uint32_t* eventsRead, int32_
     return NO_ERROR;
 }
 
-int32_t startRemote(player_handles* handles)
+int32_t startRemote(player_handles* handles, graphics* graphicsStruct)
 {
     pthread_t remoteThreadId;
     const char* dev = "/dev/input/event0";
@@ -45,6 +44,7 @@ int32_t startRemote(player_handles* handles)
     remote_loop_args* args = (remote_loop_args*) malloc(sizeof(remote_loop_args));
     args->handles = handles;
     args->inputFileDesc = open(dev, O_RDWR);
+    args->graphicsStruct = graphicsStruct;
 
     if(args->inputFileDesc == -1)
     {
@@ -69,9 +69,48 @@ int32_t startRemote(player_handles* handles)
     return NO_ERROR;
 }
 
-static void changeChannel(player_handles* handles, int32_t* currentChannel, int32_t numberOfPrograms)
+static void clearScreen(void* args)
 {
-    printf("Ladimotherfuckingda\n");
+    printf("Clear screen\n");
+    clearGraphics((graphics*) args);
+}
+
+static void showChannelInfo(graphics* graphicsStruct, int32_t currentChannel)
+{
+    #ifdef DEBUG
+        printf("CHANNEL INFO\n\n\n");
+    #endif
+    int8_t isThereTeletext = FALSE;
+    timer_struct clearGraphicsTimer;
+    clearGraphicsTimer.timerFlags = 0;
+    struct sigevent signalEvent;
+    int32_t i;
+    pmt_table* currentPmtTable = getPMTTable((currentChannel) - 1);
+
+    for (i = 0; i < currentPmtTable->numberOfStreams; i++)
+    {
+        printf("Checking streams\n");
+        if (currentPmtTable->streams[i].descriptor == 0x56)
+        {
+            isThereTeletext = TRUE;
+            break;
+        }
+    }
+    drawChannelInfo(graphicsStruct, currentChannel, isThereTeletext);
+    signalEvent.sigev_notify = SIGEV_THREAD;
+	signalEvent.sigev_notify_function = clearScreen;
+	signalEvent.sigev_value.sival_ptr = (void*) graphicsStruct;
+	signalEvent.sigev_notify_attributes = NULL;
+	timer_create(CLOCK_REALTIME, &signalEvent, &clearGraphicsTimer.timerId);
+
+    memset(&clearGraphicsTimer.timerSpec, 0, sizeof(clearGraphicsTimer.timerSpec));
+    clearGraphicsTimer.timerSpec.it_value.tv_sec = 3;
+    clearGraphicsTimer.timerSpec.it_value.tv_nsec = 0;
+    timer_settime(clearGraphicsTimer.timerId, clearGraphicsTimer.timerFlags, &clearGraphicsTimer.timerSpec, &clearGraphicsTimer.timerSpecOld);
+}
+
+static void changeChannel(player_handles* handles, int32_t* currentChannel, int32_t numberOfPrograms, graphics* graphicsStruct)
+{
     if (*currentChannel <= 0)
     {
         *currentChannel = numberOfPrograms - 1;
@@ -80,34 +119,24 @@ static void changeChannel(player_handles* handles, int32_t* currentChannel, int3
     {
         *currentChannel = 1;
     }
-    printf("Changing to channel %d\n", *currentChannel);
+    
     changeStream(handles, *currentChannel);
+    showChannelInfo(graphicsStruct, *currentChannel);
 }
 
 static void changeChannelNumber(void* arg)
 {
+    #ifdef DEBUG
     printf("Ladida\n");
+    #endif
     timer_channel_changer_args* timeArgs = (timer_channel_changer_args*) arg;
     printf("Full CHannel %d\n", timeArgs->channelNumber);
-    changeChannel(timeArgs->handles, &timeArgs->channelNumber, timeArgs->numberOfPrograms);
-    // if (timeArgs->channelNumber > timeArgs->numberOfPrograms)
-    // {
-    //     printf("No change\n");
-    // }
-    // else
-    // {
-    //     changeStream(timeArgs->handles, timeArgs->channelNumber);
-    // }
-
-    // memset(&timeArgs->timerSpec, 0, sizeof(timeArgs->timerSpec));
-    // timer_settime(timeArgs->timerId, 0, &timeArgs->timerSpec, &timeArgs->timerSpecOld);
-
-    timeArgs->channelNumber = 0;
+    changeChannel(timeArgs->handles, &timeArgs->channelNumber, timeArgs->numberOfPrograms, timeArgs->graphicsStruct);
 }
 
 void* initRemoteLoop(void* args)
 {
-    int32_t currentChannel = 0;
+    int32_t currentChannel = 1;
     uint32_t soundVolume;
     uint8_t mute = FALSE;
     int32_t numberOfPrograms = getPATTable()->number_of_programs;
@@ -121,17 +150,19 @@ void* initRemoteLoop(void* args)
     timeArgs.channelNumber = 1;
     timeArgs.numberOfPrograms = numberOfPrograms;
     timeArgs.handles = remoteArgs->handles;
+    timeArgs.graphicsStruct = remoteArgs->graphicsStruct;
+
     int32_t timerFlags = 0;
     struct sigevent signalEvent;
 	signalEvent.sigev_notify = SIGEV_THREAD;
 	signalEvent.sigev_notify_function = changeChannelNumber;
 	signalEvent.sigev_value.sival_ptr = (void*) &timeArgs;
 	signalEvent.sigev_notify_attributes = NULL;
-	timer_create(CLOCK_REALTIME, &signalEvent, &timeArgs.timerId);
+	timer_create(CLOCK_REALTIME, &signalEvent, &timeArgs.channelChangerTimer.timerId);
 
-    memset(&timeArgs.timerSpec, 0, sizeof(timeArgs.timerSpec));
-    timeArgs.timerSpec.it_value.tv_sec = 2;
-    timeArgs.timerSpec.it_value.tv_nsec = 0;
+    memset(&timeArgs.channelChangerTimer.timerSpec, 0, sizeof(timeArgs.channelChangerTimer.timerSpec));
+    timeArgs.channelChangerTimer.timerSpec.it_value.tv_sec = 2;
+    timeArgs.channelChangerTimer.timerSpec.it_value.tv_nsec = 0;
 
     while(TRUE)
     {
@@ -164,46 +195,26 @@ void* initRemoteLoop(void* args)
                         {
                             timeArgs.channelNumber = timeArgs.channelNumber * 10 + remoteArgs->eventBuf[i].code - 1;
                             printf(" calling timer1 %d\n", timeArgs.channelNumber);
-                            //brisanje strukture za vremensko podešavanje timer-a
-                            // memset(&timeArgs.timerSpec, 0, sizeof(timeArgs.timerSpec));
-                            //zaustavljanje timer-a prosleđivanjem izbrisane strukture
-                            // timer_settime(timeArgs.timerId, 0, &timeArgs.timerSpec, &timeArgs.timerSpecOld);
-                            timer_settime(timeArgs.timerId, timerFlags, &timeArgs.timerSpec, &timeArgs.timerSpecOld);
+                            timer_settime(timeArgs.channelChangerTimer.timerId, timerFlags, &timeArgs.channelChangerTimer.timerSpec,
+                                 &timeArgs.channelChangerTimer.timerSpecOld);
                         }
                         break;
                     }	
 					case 62:
                     {
 						currentChannel++;
-                        changeChannel(remoteArgs->handles, &currentChannel, numberOfPrograms);
-						// if (currentChannel < 0)
-                        // {
-                        //     currentChannel = numberOfPrograms - 2;
-                        // }
-						// if (currentChannel >= numberOfPrograms)
-                        // {
-                        //     currentChannel = 0;
-                        // }
-						// changeStream(remoteArgs->handles, currentChannel);	
+                        changeChannel(remoteArgs->handles, &currentChannel, numberOfPrograms, remoteArgs->graphicsStruct);
 						break;
                     }
 					case 61:
                     {
 						currentChannel--;
-                        changeChannel(remoteArgs->handles, &currentChannel, numberOfPrograms);
-						// if (currentChannel < 0)
-                        // {
-                        //     currentChannel = numberOfPrograms - 2;
-                        // }
-						// if (currentChannel >= numberOfPrograms)
-                        // {
-                        //     currentChannel = 0;
-                        // }
-						// changeStream(remoteArgs->handles, currentChannel);	
+                        changeChannel(remoteArgs->handles, &currentChannel, numberOfPrograms, remoteArgs->graphicsStruct);
 						break;
                     }
                     case 63:
                     {
+                        //volume up
                         if (soundVolume < INT32_MAX)
                         {
                             soundVolume += INT32_MAX * 0.1;
@@ -214,6 +225,7 @@ void* initRemoteLoop(void* args)
                     }
                     case 64:
                     {
+                        //volume down
                         if (soundVolume > 0)
                         {
                             soundVolume -= INT32_MAX * 0.1;
@@ -224,6 +236,7 @@ void* initRemoteLoop(void* args)
                     }
                     case 60:
                     {
+                        //mute
                         if (mute)
                         {
                             Player_Volume_Set(remoteArgs->handles->playerHandle, soundVolume);
@@ -238,8 +251,15 @@ void* initRemoteLoop(void* args)
                     }
 					case 102:
                     {
+                        //exit
                         exitRemote = TRUE;
 						break;
+                    }
+                    case 358:
+                    {
+                        //info
+                        showChannelInfo(remoteArgs->graphicsStruct, currentChannel);
+                        break;
                     }
 				}
 			}	

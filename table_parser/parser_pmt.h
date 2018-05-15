@@ -26,7 +26,7 @@ typedef struct _pmt_streams {
 	uint8_t stream_type;
 	uint16_t elementary_PID;
 	uint16_t ES_info_length;
-	uint8_t isThereTeletext;
+	uint8_t descriptor;
 } pmt_streams;
 
 typedef struct _pmt_table {
@@ -40,6 +40,7 @@ typedef struct _pmt_table {
 	uint8_t last_section_number;
 	uint16_t PCR_PID;
 	uint16_t program_info_length;
+	uint16_t numberOfStreams;
 	pmt_streams* streams;
 } pmt_table;
 

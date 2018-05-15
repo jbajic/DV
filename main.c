@@ -21,13 +21,13 @@ int32_t main(int argc, char** argv)
 
     setupData(handles);
 
-    startRemote(handles);
+    startRemote(handles, graphicsStruct);
 
     removeStream(handles);
     stopPlayer(handles);
     deinitGraphics(graphicsStruct);
     tunerDeinitialization();
-    
+
     free(config);
     free(handles);
     free(graphicsStruct);

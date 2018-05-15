@@ -21,6 +21,7 @@
 #define REMOTE_H
 
 #include "./../player_tuner/player_tuner.h"
+#include "./../graphics/graphics.h"
 #include <linux/input.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -35,6 +36,7 @@ typedef struct _remote_loop_args {
     struct input_event* eventBuf;
     int32_t inputFileDesc;
     player_handles* handles;
+    graphics* graphicsStruct;
 } remote_loop_args;
 
 typedef struct _timer_channel_changer_args
@@ -42,12 +44,11 @@ typedef struct _timer_channel_changer_args
     player_handles* handles;
     int32_t channelNumber;
     int32_t numberOfPrograms;
-    timer_t timerId;
-    struct itimerspec timerSpec;
-    struct itimerspec timerSpecOld;
+    timer_struct channelChangerTimer;
+    graphics* graphicsStruct;
 } timer_channel_changer_args;
 
-int32_t startRemote(player_handles*);
+int32_t startRemote(player_handles*, graphics*);
 
 int32_t initRemote(struct input_event**, int32_t*);
 

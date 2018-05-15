@@ -45,8 +45,10 @@ typedef struct _graphics
 
 int32_t initGraphics(graphics*);
 
-int32_t drawChannel(int32_t);
+int32_t drawChannelInfo(graphics*, int32_t, int8_t);
 
 int32_t deinitGraphics(graphics*);
+
+int32_t clearGraphics(graphics*);
 
 #endif

@@ -61,15 +61,15 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
 	currentPMT->program_info_length = (uint16_t)
 		((*(buffer + 10) << 8) + *(buffer + 11)) & 0x0FFF;
 	
-	currentPMT->streams = (pmt_streams*) malloc(4 * sizeof(pmt_streams));
 	
 	maxNumberOfStreams = (currentPMT->section_length - 13) / 5;
 	numberOfBytesStreams = (currentPMT->section_length - 13);
-	// currentPMT->streams = (pmt_streams*) malloc(maxNumberOfStreams * sizeof(pmt_streams));
+	printf("MAX NUMBER OF STREAMS %d", maxNumberOfStreams);
+	// currentPMT->streams = (pmt_streams*) malloc(4 * sizeof(pmt_streams));
+	currentPMT->streams = (pmt_streams*) malloc(maxNumberOfStreams * sizeof(pmt_streams));
 	
-	for (i = 0; i < 4; ++i) 
+	for (i = 0; i < maxNumberOfStreams; ++i) 
     {
-	
 		currentPMT->streams[i].stream_type = (uint8_t) 
 			*(buffer + 12 + i * 5 + offset);
 			
@@ -79,12 +79,12 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
 		currentPMT->streams[i].ES_info_length = (uint16_t)
 			((*(buffer + 15 + i * 5 + offset) << 8) + *(buffer + 16 + i * 5 + offset)) & 0x0FFF;
 			
-		currentPMT->streams[i].isThereTeletext = (uint8_t)
-			(*(buffer + 17 + i * 5 + offset) << 8) == 0x56 ? 1 : 0;
+		currentPMT->streams[i].descriptor = (uint8_t)
+			(*(buffer + 17 + i * 5));
 
 		offset += (currentPMT->streams + i)->ES_info_length;
-		numberOfBytesStreams -= 5 - (currentPMT->streams + i)->ES_info_length;
-		if (numberOfBytesStreams == 0)
+		numberOfBytesStreams -= (5 + (currentPMT->streams + i)->ES_info_length);
+		if (numberOfBytesStreams <= 0)
         {
             break;
         }
@@ -93,6 +93,7 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
 		printf("elementary PID: %d\n", (currentPMT->streams + i)->elementary_PID);
 		printf("ES info length: %d\n\n", (currentPMT->streams + i)->ES_info_length);
     }
+	currentPMT->numberOfStreams = i;
 	currentPMTTableIndex++;
 	isPMTTableParsed = TRUE;
     return NO_ERROR;
