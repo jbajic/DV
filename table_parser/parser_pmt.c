@@ -85,9 +85,10 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
         {
             break;
         }
-		// printf("stream type: %d\n", (currentPMT->streams + i)->stream_type);
-		// printf("elementary PID: %d\n", (currentPMT->streams + i)->elementary_PID);
-		// printf("ES info length: %d\n\n", (currentPMT->streams + i)->ES_info_length);
+		printf("PMT Parsing:\n");
+		printf("stream type: %d\n", (currentPMT->streams + i)->stream_type);
+		printf("elementary PID: %d\n", (currentPMT->streams + i)->elementary_PID);
+		printf("ES info length: %d\n\n", (currentPMT->streams + i)->ES_info_length);
     }
 	currentPMTTableIndex++;
 	isPMTTableParsed = TRUE;

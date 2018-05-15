@@ -127,6 +127,7 @@ int32_t setFilterToPMT(int32_t (*filterCallback)(uint8_t*), player_handles* hand
     for (i = 0; i < patTable->number_of_programs - 1; i++)
     {
         printf("NUMERO OF PROGRAMO2 %d\n", i);
+        printf("PID %d\n", patTable->pat_programm[i + 1].programm_map_pid);
         /* Set filter to demux */
         result = Demux_Set_Filter(handles->playerHandle, patTable->pat_programm[i + 1].programm_map_pid, 0x02, &handles->filterHandle);
         ASSERT_TDP_RESULT(result, "Demux_Set_Filter");

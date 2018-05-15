@@ -24,7 +24,7 @@ static int32_t getKeys(int32_t count, uint8_t* buf, uint32_t* eventsRead, int32_
     int32_t ret = 0;
     
     /* read input events and put them in buffer */
-    printf("buff5: %u\n inputfile5 %d\n", *buf, inputFileDesc);
+    // printf("buff5: %u\n inputfile5 %d\n", *buf, inputFileDesc);
     ret = read(inputFileDesc, buf, (size_t)(count * (int) sizeof(struct input_event)));
     if (ret <= 0)
     {
@@ -69,6 +69,19 @@ int32_t startRemote(player_handles* handles)
     return NO_ERROR;
 }
 
+void changeChannelNumber(void* arg)
+{
+    printf("Ladida\n");
+    timer_channel_changer_args* timeArgs = (timer_channel_changer_args*) arg;
+    printf("Full CHannel %d\n", timeArgs->channelNumber);
+    changeStream(timeArgs->handles, timeArgs->channelNumber);
+
+    // memset(&timeArgs->timerSpec, 0, sizeof(timeArgs->timerSpec));
+    // timer_settime(timeArgs->timerId, 0, &timeArgs->timerSpec, &timeArgs->timerSpecOld);
+
+    timeArgs->channelNumber = 0;
+}
+
 void* initRemoteLoop(void* args)
 {
     int32_t currentChannel = 0;
@@ -81,21 +94,62 @@ void* initRemoteLoop(void* args)
     remote_loop_args* remoteArgs = (remote_loop_args*) args;
     Player_Volume_Get(remoteArgs->handles->playerHandle, &soundVolume);
 
+    timer_channel_changer_args timeArgs;
+    timeArgs.channelNumber = 0;
+    timeArgs.handles = remoteArgs->handles;
+    int32_t timerFlags = 0;
+    struct sigevent signalEvent;
+	signalEvent.sigev_notify = SIGEV_THREAD;
+	signalEvent.sigev_notify_function = changeChannelNumber;
+	signalEvent.sigev_value.sival_ptr = (void*) &timeArgs;
+	signalEvent.sigev_notify_attributes = NULL;
+	timer_create(CLOCK_REALTIME, &signalEvent, &timeArgs.timerId);
+
+    memset(&timeArgs.timerSpec, 0, sizeof(timeArgs.timerSpec));
+    timeArgs.timerSpec.it_value.tv_sec = 2;
+    timeArgs.timerSpec.it_value.tv_nsec = 0;
+
     while(TRUE)
     {
         /* read input eventS */
-        if(getKeys(NUM_EVENTS, (uint8_t*)remoteArgs->eventBuf, &eventCnt, remoteArgs->inputFileDesc))
+        if (getKeys(NUM_EVENTS, (uint8_t*)remoteArgs->eventBuf, &eventCnt, remoteArgs->inputFileDesc))
         {
 			printf("Error while reading input events !");
 			//return ERROR;
 		}
 
-        for(i = 0; i < eventCnt; i++)
+        for (i = 0; i < eventCnt; i++)
         {
-	
-			if(remoteArgs->eventBuf[i].value == 1) {
-				switch(remoteArgs->eventBuf[i].code) {
+			if (remoteArgs->eventBuf[i].value == 1) 
+            {
+				switch (remoteArgs->eventBuf[i].code) 
+                {
+                    case 1:
+                    case 2:
+                    case 3:
+                    case 4:
+                    case 5:
+                    case 6:
+                    case 7:
+                    case 8:
+                    case 9:
+                    case 10:
+                    {
+                        printf("Before calling timer1 %d\n", timeArgs.channelNumber);
+                        if (timeArgs.channelNumber < 999)
+                        {
+                            timeArgs.channelNumber = timeArgs.channelNumber * 10 + remoteArgs->eventBuf[i].code - 1;
+                            printf(" calling timer1 %d\n", timeArgs.channelNumber);
+                            //brisanje strukture za vremensko podešavanje timer-a
+                            // memset(&timeArgs.timerSpec, 0, sizeof(timeArgs.timerSpec));
+                            //zaustavljanje timer-a prosleđivanjem izbrisane strukture
+                            // timer_settime(timeArgs.timerId, 0, &timeArgs.timerSpec, &timeArgs.timerSpecOld);
+                            timer_settime(timeArgs.timerId, timerFlags, &timeArgs.timerSpec, &timeArgs.timerSpecOld);
+                        }
+                        break;
+                    }	
 					case 62:
+                    {
 						currentChannel++;
 						if (currentChannel < 0)
                         {
@@ -107,7 +161,9 @@ void* initRemoteLoop(void* args)
                         }
 						changeStream(remoteArgs->handles, currentChannel);	
 						break;
+                    }
 					case 61:
+                    {
 						currentChannel--;
 						if (currentChannel < 0)
                         {
@@ -119,7 +175,7 @@ void* initRemoteLoop(void* args)
                         }
 						changeStream(remoteArgs->handles, currentChannel);	
 						break;
-                        //volume up
+                    }
                     case 63:
                         if (soundVolume < INT32_MAX)
                         {
@@ -128,7 +184,6 @@ void* initRemoteLoop(void* args)
                         }
                         mute = FALSE;
                         break;
-                    //volume down                        
                     case 64:
                     if (soundVolume > 0)
                         {
@@ -137,7 +192,6 @@ void* initRemoteLoop(void* args)
                         }
                         mute = FALSE;                        
                         break;
-                    //mute
                     case 60:
                         if (mute)
                         {

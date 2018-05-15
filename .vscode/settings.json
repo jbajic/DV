@@ -1,6 +1,9 @@
 {
     "files.associations": {
         "main.h": "c",
-        "player_tuner.h": "c"
+        "player_tuner.h": "c",
+        "parser_pat.h": "c",
+        "parser_pmt.h": "c",
+        "remote.h": "c"
     }
 }

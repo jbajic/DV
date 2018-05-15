@@ -24,8 +24,10 @@
 #include <linux/input.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <signal.h>
 #include <stdint.h>
 #include <errno.h>
+#include <time.h>
 
 #define NUM_EVENTS  5
 
@@ -34,6 +36,15 @@ typedef struct _remote_loop_args {
     int32_t inputFileDesc;
     player_handles* handles;
 } remote_loop_args;
+
+typedef struct _timer_channel_changer_args
+{
+    player_handles* handles;
+    int32_t channelNumber;
+    timer_t timerId;
+    struct itimerspec timerSpec;
+    struct itimerspec timerSpecOld;
+} timer_channel_changer_args;
 
 int32_t startRemote(player_handles*);
 
