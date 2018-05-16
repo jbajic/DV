@@ -129,6 +129,21 @@ static void changeChannelNumber(void* arg)
     //                              &timeArgs->channelChangerTimer.timerSpecOld);
 }
 
+static void setupTimer(timer_struct* timer, void (*timerCallback)(void*), void* timerArgs, int32_t seconds)
+{
+    timer->timerFlags = 0;
+    struct sigevent signalEvent;
+	signalEvent.sigev_notify = SIGEV_THREAD;
+	signalEvent.sigev_notify_function = timerCallback;
+	signalEvent.sigev_value.sival_ptr = timerArgs;
+	signalEvent.sigev_notify_attributes = NULL;
+	timer_create(CLOCK_REALTIME, &signalEvent, &timer->timerId);
+    memset(&timer->timerSpec, 0, sizeof(timer->timerSpec));
+
+    timer->timerSpec.it_value.tv_sec = seconds;
+    timer->timerSpec.it_value.tv_nsec = 0;
+}
+
 void* initRemoteLoop(void* args)
 {
     // int32_t currentChannel = 1;
@@ -156,24 +171,26 @@ void* initRemoteLoop(void* args)
     timeArgs.channelChangerTimer.timerFlags = 0;
     timeArgs.removeChannelInfoTimer = &channelRemoveInfoTimer;
 
-    struct sigevent signalEvent, signalEventRemove;
-	signalEvent.sigev_notify = SIGEV_THREAD;
-	signalEvent.sigev_notify_function = changeChannelNumber;
-	signalEvent.sigev_value.sival_ptr = (void*) &timeArgs;
-	signalEvent.sigev_notify_attributes = NULL;
-	timer_create(CLOCK_REALTIME, &signalEvent, &timeArgs.channelChangerTimer.timerId);
-    memset(&timeArgs.channelChangerTimer.timerSpec, 0, sizeof(timeArgs.channelChangerTimer.timerSpec));
-    timeArgs.channelChangerTimer.timerSpec.it_value.tv_sec = 2;
-    timeArgs.channelChangerTimer.timerSpec.it_value.tv_nsec = 0;
+    setupTimer(&timeArgs.channelChangerTimer, changeChannelNumber, (void*) &timeArgs, 2);
+    setupTimer(&channelRemoveInfoTimer, clearScreen, (void*) remoteArgs->graphicsStruct, 3);
+    // struct sigevent signalEvent, signalEventRemove;
+	// signalEvent.sigev_notify = SIGEV_THREAD;
+	// signalEvent.sigev_notify_function = changeChannelNumber;
+	// signalEvent.sigev_value.sival_ptr = (void*) &timeArgs;
+	// signalEvent.sigev_notify_attributes = NULL;
+	// timer_create(CLOCK_REALTIME, &signalEvent, &timeArgs.channelChangerTimer.timerId);
+    // memset(&timeArgs.channelChangerTimer.timerSpec, 0, sizeof(timeArgs.channelChangerTimer.timerSpec));
+    // timeArgs.channelChangerTimer.timerSpec.it_value.tv_sec = 2;
+    // timeArgs.channelChangerTimer.timerSpec.it_value.tv_nsec = 0;
 
-    signalEventRemove.sigev_notify = SIGEV_THREAD;
-	signalEventRemove.sigev_notify_function = clearScreen;
-	signalEventRemove.sigev_value.sival_ptr = (void*) remoteArgs->graphicsStruct;
-	signalEventRemove.sigev_notify_attributes = NULL;
-	timer_create(CLOCK_REALTIME, &signalEventRemove, &channelRemoveInfoTimer. timerId);
-    memset(&channelRemoveInfoTimer.timerSpec, 0, sizeof(channelRemoveInfoTimer.timerSpec));
-    channelRemoveInfoTimer.timerSpec.it_value.tv_sec = 3;
-    channelRemoveInfoTimer.timerSpec.it_value.tv_nsec = 0;
+    // signalEventRemove.sigev_notify = SIGEV_THREAD;
+	// signalEventRemove.sigev_notify_function = clearScreen;
+	// signalEventRemove.sigev_value.sival_ptr = (void*) remoteArgs->graphicsStruct;
+	// signalEventRemove.sigev_notify_attributes = NULL;
+	// timer_create(CLOCK_REALTIME, &signalEventRemove, &channelRemoveInfoTimer. timerId);
+    // memset(&channelRemoveInfoTimer.timerSpec, 0, sizeof(channelRemoveInfoTimer.timerSpec));
+    // channelRemoveInfoTimer.timerSpec.it_value.tv_sec = 3;
+    // channelRemoveInfoTimer.timerSpec.it_value.tv_nsec = 0;
 
     while(TRUE)
     {
