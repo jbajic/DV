@@ -64,7 +64,7 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
 	
 	maxNumberOfStreams = (currentPMT->section_length - 13) / 5;
 	numberOfBytesStreams = (currentPMT->section_length - 13);
-	printf("MAX NUMBER OF STREAMS %d", maxNumberOfStreams);
+	// printf("MAX NUMBER OF STREAMS %d", maxNumberOfStreams);
 	// currentPMT->streams = (pmt_streams*) malloc(4 * sizeof(pmt_streams));
 	currentPMT->streams = (pmt_streams*) malloc(maxNumberOfStreams * sizeof(pmt_streams));
 	
@@ -88,10 +88,10 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
         {
             break;
         }
-		printf("PMT Parsing:\n");
-		printf("stream type: %d\n", (currentPMT->streams + i)->stream_type);
-		printf("elementary PID: %d\n", (currentPMT->streams + i)->elementary_PID);
-		printf("ES info length: %d\n\n", (currentPMT->streams + i)->ES_info_length);
+		// printf("PMT Parsing:\n");
+		// printf("stream type: %d\n", (currentPMT->streams + i)->stream_type);
+		// printf("elementary PID: %d\n", (currentPMT->streams + i)->elementary_PID);
+		// printf("ES info length: %d\n\n", (currentPMT->streams + i)->ES_info_length);
     }
 	currentPMT->numberOfStreams = i;
 	currentPMTTableIndex++;

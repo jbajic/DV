@@ -75,15 +75,10 @@ static void clearScreen(void* args)
     clearGraphics((graphics*) args);
 }
 
-static void showChannelInfo(graphics* graphicsStruct, int32_t currentChannel)
+static void showChannelInfo(graphics* graphicsStruct, int32_t currentChannel, timer_struct* removeChannelInfo)
 {
-    #ifdef DEBUG
-        printf("CHANNEL INFO\n\n\n");
-    #endif
+    printf("CHANNEL INFO\n\n\n");
     int8_t isThereTeletext = FALSE;
-    timer_struct clearGraphicsTimer;
-    clearGraphicsTimer.timerFlags = 0;
-    struct sigevent signalEvent;
     int32_t i;
     pmt_table* currentPmtTable = getPMTTable((currentChannel) - 1);
 
@@ -97,76 +92,91 @@ static void showChannelInfo(graphics* graphicsStruct, int32_t currentChannel)
         }
     }
     drawChannelInfo(graphicsStruct, currentChannel, isThereTeletext);
-    signalEvent.sigev_notify = SIGEV_THREAD;
-	signalEvent.sigev_notify_function = clearScreen;
-	signalEvent.sigev_value.sival_ptr = (void*) graphicsStruct;
-	signalEvent.sigev_notify_attributes = NULL;
-	timer_create(CLOCK_REALTIME, &signalEvent, &clearGraphicsTimer.timerId);
-
-    memset(&clearGraphicsTimer.timerSpec, 0, sizeof(clearGraphicsTimer.timerSpec));
-    clearGraphicsTimer.timerSpec.it_value.tv_sec = 3;
-    clearGraphicsTimer.timerSpec.it_value.tv_nsec = 0;
-    timer_settime(clearGraphicsTimer.timerId, clearGraphicsTimer.timerFlags, &clearGraphicsTimer.timerSpec, &clearGraphicsTimer.timerSpecOld);
+    timer_settime(removeChannelInfo->timerId, removeChannelInfo->timerFlags, &removeChannelInfo->timerSpec, &removeChannelInfo->timerSpecOld);
 }
 
-static void changeChannel(player_handles* handles, int32_t* currentChannel, int32_t numberOfPrograms, graphics* graphicsStruct)
+static void changeChannel(change_channel_args* changeChannelArgs, timer_struct* removeChannelInfoTimer)
 {
-    if (*currentChannel <= 0)
+    if (changeChannelArgs->channelNumber <= 0)
     {
-        *currentChannel = numberOfPrograms - 1;
+        printf("COndition 1\n");
+        changeChannelArgs->currentChannel = changeChannelArgs->numberOfPrograms - 1;
     }
-    if (*currentChannel > numberOfPrograms - 1)
+    else if (changeChannelArgs->channelNumber > changeChannelArgs->numberOfPrograms - 1)
     {
-        *currentChannel = 1;
+        printf("COndition 2\n");
+        changeChannelArgs->currentChannel = 1;
     }
-    
-    changeStream(handles, *currentChannel);
-    showChannelInfo(graphicsStruct, *currentChannel);
+    else
+    {
+        printf("COndition 3\n");
+        changeChannelArgs->currentChannel = changeChannelArgs->channelNumber;
+    }
+    printf("numberOfChannels %d\nchannel current %d\nchannelNumber %d\n", changeChannelArgs->numberOfPrograms, 
+        changeChannelArgs->currentChannel, changeChannelArgs->channelNumber);
+    changeStream(changeChannelArgs->handles, changeChannelArgs->currentChannel);
+    changeChannelArgs->channelNumber = 0;
+    showChannelInfo(changeChannelArgs->graphicsStruct, changeChannelArgs->currentChannel, removeChannelInfoTimer);
 }
 
 static void changeChannelNumber(void* arg)
 {
-    #ifdef DEBUG
-    printf("Ladida\n");
-    #endif
     timer_channel_changer_args* timeArgs = (timer_channel_changer_args*) arg;
-    printf("Full CHannel %d\n", timeArgs->channelNumber);
-    changeChannel(timeArgs->handles, &timeArgs->channelNumber, timeArgs->numberOfPrograms, timeArgs->graphicsStruct);
+    printf("changeChannelNumber Full Channel %d\n", timeArgs->changeChannelArgs->channelNumber);
+    changeChannel(timeArgs->changeChannelArgs, timeArgs->removeChannelInfoTimer);
+    // memset(&timeArgs->channelChangerTimer.timerSpec, 0, sizeof(timeArgs->channelChangerTimer.timerSpec));
+    // timer_settime(timeArgs->channelChangerTimer.timerId, 0, &timeArgs->channelChangerTimer.timerSpec,
+    //                              &timeArgs->channelChangerTimer.timerSpecOld);
 }
 
 void* initRemoteLoop(void* args)
 {
-    int32_t currentChannel = 1;
+    // int32_t currentChannel = 1;
     uint32_t soundVolume;
     uint8_t mute = FALSE;
-    int32_t numberOfPrograms = getPATTable()->number_of_programs;
+    // int32_t numberOfPrograms = getPATTable()->number_of_programs;
     int32_t exitRemote = FALSE;
     uint32_t i;
     uint32_t eventCnt;
     remote_loop_args* remoteArgs = (remote_loop_args*) args;
     Player_Volume_Get(remoteArgs->handles->playerHandle, &soundVolume);
 
-    timer_channel_changer_args timeArgs;
-    timeArgs.channelNumber = 1;
-    timeArgs.numberOfPrograms = numberOfPrograms;
-    timeArgs.handles = remoteArgs->handles;
-    timeArgs.graphicsStruct = remoteArgs->graphicsStruct;
+    change_channel_args changeChannelArgs;
+    changeChannelArgs.currentChannel = 1;
+    changeChannelArgs.channelNumber = 0;
+    changeChannelArgs.handles = remoteArgs->handles;
+    changeChannelArgs.graphicsStruct = remoteArgs->graphicsStruct;
+    changeChannelArgs.numberOfPrograms = getPATTable()->number_of_programs;
 
-    int32_t timerFlags = 0;
-    struct sigevent signalEvent;
+    timer_struct channelRemoveInfoTimer;
+    channelRemoveInfoTimer.timerFlags = 0;
+
+    timer_channel_changer_args timeArgs;
+    timeArgs.changeChannelArgs = &changeChannelArgs;
+    timeArgs.channelChangerTimer.timerFlags = 0;
+    timeArgs.removeChannelInfoTimer = &channelRemoveInfoTimer;
+
+    struct sigevent signalEvent, signalEventRemove;
 	signalEvent.sigev_notify = SIGEV_THREAD;
 	signalEvent.sigev_notify_function = changeChannelNumber;
 	signalEvent.sigev_value.sival_ptr = (void*) &timeArgs;
 	signalEvent.sigev_notify_attributes = NULL;
 	timer_create(CLOCK_REALTIME, &signalEvent, &timeArgs.channelChangerTimer.timerId);
-
     memset(&timeArgs.channelChangerTimer.timerSpec, 0, sizeof(timeArgs.channelChangerTimer.timerSpec));
     timeArgs.channelChangerTimer.timerSpec.it_value.tv_sec = 2;
     timeArgs.channelChangerTimer.timerSpec.it_value.tv_nsec = 0;
 
+    signalEventRemove.sigev_notify = SIGEV_THREAD;
+	signalEventRemove.sigev_notify_function = clearScreen;
+	signalEventRemove.sigev_value.sival_ptr = (void*) remoteArgs->graphicsStruct;
+	signalEventRemove.sigev_notify_attributes = NULL;
+	timer_create(CLOCK_REALTIME, &signalEventRemove, &channelRemoveInfoTimer. timerId);
+    memset(&channelRemoveInfoTimer.timerSpec, 0, sizeof(channelRemoveInfoTimer.timerSpec));
+    channelRemoveInfoTimer.timerSpec.it_value.tv_sec = 3;
+    channelRemoveInfoTimer.timerSpec.it_value.tv_nsec = 0;
+
     while(TRUE)
     {
-        /* read input eventS */
         if (getKeys(NUM_EVENTS, (uint8_t*)remoteArgs->eventBuf, &eventCnt, remoteArgs->inputFileDesc))
         {
 			printf("Error while reading input events !");
@@ -190,26 +200,26 @@ void* initRemoteLoop(void* args)
                     case 9:
                     case 10:
                     {
-                        printf("Before calling timer1 %d\n", timeArgs.channelNumber);
-                        if (timeArgs.channelNumber < 999)
+                        printf("Before calling timer %d\n", timeArgs.changeChannelArgs->channelNumber);
+                        if (timeArgs.changeChannelArgs->channelNumber < 999)
                         {
-                            timeArgs.channelNumber = timeArgs.channelNumber * 10 + remoteArgs->eventBuf[i].code - 1;
-                            printf(" calling timer1 %d\n", timeArgs.channelNumber);
-                            timer_settime(timeArgs.channelChangerTimer.timerId, timerFlags, &timeArgs.channelChangerTimer.timerSpec,
-                                 &timeArgs.channelChangerTimer.timerSpecOld);
+                            changeChannelArgs.channelNumber = changeChannelArgs.channelNumber * 10 + remoteArgs->eventBuf[i].code - 1;
+                            printf("calling timer %d\n", changeChannelArgs.channelNumber);
+                            timer_settime(timeArgs.channelChangerTimer.timerId, timeArgs.channelChangerTimer.timerFlags, 
+                                &timeArgs.channelChangerTimer.timerSpec, &timeArgs.channelChangerTimer.timerSpecOld);
                         }
                         break;
                     }	
 					case 62:
                     {
-						currentChannel++;
-                        changeChannel(remoteArgs->handles, &currentChannel, numberOfPrograms, remoteArgs->graphicsStruct);
+						changeChannelArgs.channelNumber = changeChannelArgs.currentChannel + 1;
+                        changeChannel(&changeChannelArgs, &channelRemoveInfoTimer);
 						break;
                     }
 					case 61:
                     {
-						currentChannel--;
-                        changeChannel(remoteArgs->handles, &currentChannel, numberOfPrograms, remoteArgs->graphicsStruct);
+						changeChannelArgs.channelNumber = changeChannelArgs.currentChannel - 1;
+                        changeChannel(&changeChannelArgs, &channelRemoveInfoTimer);
 						break;
                     }
                     case 63:
@@ -258,7 +268,7 @@ void* initRemoteLoop(void* args)
                     case 358:
                     {
                         //info
-                        showChannelInfo(remoteArgs->graphicsStruct, currentChannel);
+                        showChannelInfo(remoteArgs->graphicsStruct, changeChannelArgs.currentChannel, &channelRemoveInfoTimer);
                         break;
                     }
 				}
@@ -269,5 +279,7 @@ void* initRemoteLoop(void* args)
             break;
         }
     }
+    timer_delete(channelRemoveInfoTimer.timerId);
+    timer_delete(timeArgs.channelChangerTimer.timerId);
     return NULL;
 }

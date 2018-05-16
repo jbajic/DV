@@ -39,13 +39,20 @@ typedef struct _remote_loop_args {
     graphics* graphicsStruct;
 } remote_loop_args;
 
-typedef struct _timer_channel_changer_args
+typedef struct _change_channel_args
 {
     player_handles* handles;
     int32_t channelNumber;
+    int32_t currentChannel;
     int32_t numberOfPrograms;
-    timer_struct channelChangerTimer;
     graphics* graphicsStruct;
+} change_channel_args;
+
+typedef struct _timer_channel_changer_args
+{
+    change_channel_args* changeChannelArgs;
+    timer_struct channelChangerTimer;
+    timer_struct* removeChannelInfoTimer;
 } timer_channel_changer_args;
 
 int32_t startRemote(player_handles*, graphics*);

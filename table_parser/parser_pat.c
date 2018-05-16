@@ -60,8 +60,8 @@ int32_t filterPATParserCallback(uint8_t* buffer)
 
 		(patTable.pat_programm + i)->programm_map_pid = (uint16_t)
 			((*(buffer + 10 +(i*4)) << 8) + *(buffer + 11 + (i * 4))) & 0x1FFF;
-		printf("programm_number: %d\n", (patTable.pat_programm + i)->programm_number);
-		printf("programm_map_pid: %d\n\n", (patTable.pat_programm + i)->programm_map_pid);
+		// printf("programm_number: %d\n", (patTable.pat_programm + i)->programm_number);
+		// printf("programm_map_pid: %d\n\n", (patTable.pat_programm + i)->programm_map_pid);
 	}
 
 	// printf("table Id: %d\n", patTable.pat_header.table_id);
