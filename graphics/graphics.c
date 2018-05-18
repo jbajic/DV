@@ -99,6 +99,60 @@ int32_t drawChannelInfo(graphics* graphicsStruct, int32_t channelNumber, int8_t 
     return NO_ERROR;
 }
 
+int32_t drawSoundInfo(graphics* graphicsStruct, uint32_t volume)
+{
+	printf("Volume percent %lf\n", (float)volume / INT32_MAX);
+	int32_t volumePercent = roundfunc(((float)volume / INT32_MAX) * 100);
+	int32_t i;
+	char tekst[10];
+	printf("Volume percent \"%d\"\n", volumePercent);
+	sprintf(tekst, "%d %%", volumePercent);
+
+	//clear surface
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x00));
+	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 0, 0, graphicsStruct->screenWidth, graphicsStruct->screenHeight));
+
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0xAA));
+    DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 
+		11 * (graphicsStruct->screenWidth / 12) , 200,
+		12 * (graphicsStruct->screenWidth / 12), graphicsStruct->screenHeight - 300));
+    
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0xFF, 0xFF));
+	for (i = 1; i <= MAX_VOLUME_LINES; i++)
+	{
+		if ((i * 10) > volumePercent)
+		{
+			DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0xFF, 0x44));
+		}
+		if (i >= BIG_VOLUME)
+		{
+			DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 
+				graphicsStruct->screenWidth - 70 -  SOUND_BIG_LINE_WIDTH + SOUND_SMALL_LINE_WIDTH, graphicsStruct->screenHeight - 250 - i * 50,
+				SOUND_BIG_LINE_WIDTH, 15));
+		}
+		else
+		{
+			DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 
+				graphicsStruct->screenWidth - 70 , graphicsStruct->screenHeight - 250 - i * 50,
+				SOUND_SMALL_LINE_WIDTH, 15));
+		}	
+	}
+	IDirectFBFont *fontInterface = NULL;
+	DFBFontDescription fontDesc;
+	
+	fontDesc.flags = DFDESC_HEIGHT;
+	fontDesc.height = 40;
+	
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0xff));
+	DFBCHECK(graphicsStruct->dfbInterface->CreateFont(graphicsStruct->dfbInterface, "/home/galois/fonts/DejaVuSans.ttf", &fontDesc, &fontInterface));
+	DFBCHECK(graphicsStruct->primary->SetFont(graphicsStruct->primary, fontInterface));
+	DFBCHECK(graphicsStruct->primary->DrawString(graphicsStruct->primary, tekst, -1,
+		graphicsStruct->screenWidth - 150,  graphicsStruct->screenHeight - 150, DSTF_LEFT));
+	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
+    
+    return NO_ERROR;
+}
+
 int32_t clearGraphics(graphics* graphicsStruct)
 {
 	printf("Clear screen\n");

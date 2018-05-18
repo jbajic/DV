@@ -146,10 +146,8 @@ static void setupTimer(timer_struct* timer, void (*timerCallback)(void*), void* 
 
 void* initRemoteLoop(void* args)
 {
-    // int32_t currentChannel = 1;
     uint32_t soundVolume;
     uint8_t mute = FALSE;
-    // int32_t numberOfPrograms = getPATTable()->number_of_programs;
     int32_t exitRemote = FALSE;
     uint32_t i;
     uint32_t eventCnt;
@@ -163,7 +161,7 @@ void* initRemoteLoop(void* args)
     changeChannelArgs.graphicsStruct = remoteArgs->graphicsStruct;
     changeChannelArgs.numberOfPrograms = getPATTable()->number_of_programs;
 
-    timer_struct channelRemoveInfoTimer;
+    timer_struct channelRemoveInfoTimer, soundRemoveTimer;
     channelRemoveInfoTimer.timerFlags = 0;
 
     timer_channel_changer_args timeArgs;
@@ -173,24 +171,7 @@ void* initRemoteLoop(void* args)
 
     setupTimer(&timeArgs.channelChangerTimer, changeChannelNumber, (void*) &timeArgs, 2);
     setupTimer(&channelRemoveInfoTimer, clearScreen, (void*) remoteArgs->graphicsStruct, 3);
-    // struct sigevent signalEvent, signalEventRemove;
-	// signalEvent.sigev_notify = SIGEV_THREAD;
-	// signalEvent.sigev_notify_function = changeChannelNumber;
-	// signalEvent.sigev_value.sival_ptr = (void*) &timeArgs;
-	// signalEvent.sigev_notify_attributes = NULL;
-	// timer_create(CLOCK_REALTIME, &signalEvent, &timeArgs.channelChangerTimer.timerId);
-    // memset(&timeArgs.channelChangerTimer.timerSpec, 0, sizeof(timeArgs.channelChangerTimer.timerSpec));
-    // timeArgs.channelChangerTimer.timerSpec.it_value.tv_sec = 2;
-    // timeArgs.channelChangerTimer.timerSpec.it_value.tv_nsec = 0;
-
-    // signalEventRemove.sigev_notify = SIGEV_THREAD;
-	// signalEventRemove.sigev_notify_function = clearScreen;
-	// signalEventRemove.sigev_value.sival_ptr = (void*) remoteArgs->graphicsStruct;
-	// signalEventRemove.sigev_notify_attributes = NULL;
-	// timer_create(CLOCK_REALTIME, &signalEventRemove, &channelRemoveInfoTimer. timerId);
-    // memset(&channelRemoveInfoTimer.timerSpec, 0, sizeof(channelRemoveInfoTimer.timerSpec));
-    // channelRemoveInfoTimer.timerSpec.it_value.tv_sec = 3;
-    // channelRemoveInfoTimer.timerSpec.it_value.tv_nsec = 0;
+    setupTimer(&soundRemoveTimer, clearScreen, (void*) remoteArgs->graphicsStruct, 3);
 
     while(TRUE)
     {
@@ -242,22 +223,37 @@ void* initRemoteLoop(void* args)
                     case 63:
                     {
                         //volume up
-                        if (soundVolume < INT32_MAX)
+                        if ((soundVolume + INT32_MAX * 0.1 ) <= INT32_MAX)
                         {
+                            printf("SOUND UP\n");
                             soundVolume += INT32_MAX * 0.1;
                             Player_Volume_Set(remoteArgs->handles->playerHandle, soundVolume);
+                            drawSoundInfo(remoteArgs->graphicsStruct, soundVolume);
                         }
+                        // timer_settime(soundRemoveTimer.timerId, soundRemoveTimer.timerFlags, &soundRemoveTimer.timerSpec,
+                        //     &soundRemoveTimer.timerSpecOld);
                         mute = FALSE;
                         break;
                     }
                     case 64:
                     {
                         //volume down
-                        if (soundVolume > 0)
+                        if (soundVolume != 0)
                         {
-                            soundVolume -= INT32_MAX * 0.1;
+                            printf("SOUND DOWN\n");
+                            if ((soundVolume - INT32_MAX * 0.1) <= 0)
+                            {
+                                soundVolume = 0;
+                            }
+                            else
+                            {
+                                soundVolume -= INT32_MAX * 0.1;
+                            }
                             Player_Volume_Set(remoteArgs->handles->playerHandle, soundVolume);
                         }
+                        drawSoundInfo(remoteArgs->graphicsStruct, soundVolume);
+                        // timer_settime(soundRemoveTimer.timerId, soundRemoveTimer.timerFlags, &soundRemoveTimer.timerSpec,
+                        //     &soundRemoveTimer.timerSpecOld);
                         mute = FALSE;                        
                         break;
                     }
@@ -297,6 +293,7 @@ void* initRemoteLoop(void* args)
         }
     }
     timer_delete(channelRemoveInfoTimer.timerId);
+    timer_delete(soundRemoveTimer.timerId);
     timer_delete(timeArgs.channelChangerTimer.timerId);
     return NULL;
 }
