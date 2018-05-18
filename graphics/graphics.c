@@ -101,11 +101,9 @@ int32_t drawChannelInfo(graphics* graphicsStruct, int32_t channelNumber, int8_t 
 
 int32_t drawSoundInfo(graphics* graphicsStruct, uint32_t volume)
 {
-	printf("Volume percent %lf\n", (float)volume / INT32_MAX);
 	int32_t volumePercent = roundfunc(((float)volume / INT32_MAX) * 100);
 	int32_t i;
 	char tekst[10];
-	printf("Volume percent \"%d\"\n", volumePercent);
 	sprintf(tekst, "%d %%", volumePercent);
 
 	//clear surface

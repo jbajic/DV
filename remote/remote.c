@@ -228,10 +228,10 @@ void* initRemoteLoop(void* args)
                             printf("SOUND UP\n");
                             soundVolume += INT32_MAX * 0.1;
                             Player_Volume_Set(remoteArgs->handles->playerHandle, soundVolume);
-                            drawSoundInfo(remoteArgs->graphicsStruct, soundVolume);
                         }
-                        // timer_settime(soundRemoveTimer.timerId, soundRemoveTimer.timerFlags, &soundRemoveTimer.timerSpec,
-                        //     &soundRemoveTimer.timerSpecOld);
+                        drawSoundInfo(remoteArgs->graphicsStruct, soundVolume);
+                        timer_settime(soundRemoveTimer.timerId, soundRemoveTimer.timerFlags, &soundRemoveTimer.timerSpec,
+                            &soundRemoveTimer.timerSpecOld);
                         mute = FALSE;
                         break;
                     }
@@ -252,8 +252,8 @@ void* initRemoteLoop(void* args)
                             Player_Volume_Set(remoteArgs->handles->playerHandle, soundVolume);
                         }
                         drawSoundInfo(remoteArgs->graphicsStruct, soundVolume);
-                        // timer_settime(soundRemoveTimer.timerId, soundRemoveTimer.timerFlags, &soundRemoveTimer.timerSpec,
-                        //     &soundRemoveTimer.timerSpecOld);
+                        timer_settime(soundRemoveTimer.timerId, soundRemoveTimer.timerFlags, &soundRemoveTimer.timerSpec,
+                            &soundRemoveTimer.timerSpecOld);
                         mute = FALSE;                        
                         break;
                     }
