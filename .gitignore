@@ -1,1 +1,9 @@
+# Ignore all
+*
+
+# Unignore all with extensions
+!*.*
+
 *.o
+.gitignore
+./vscode

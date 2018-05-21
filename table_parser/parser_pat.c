@@ -12,7 +12,7 @@
 *
 * \parser_pat.c
 * \brief
-* Datoteka definira funkcije potrebne za parsiranje PAT tablice
+* File defines functions needed for parsing PAT table
 * Made on 08.05.2018.
 *
 * @Author Jure Bajic

@@ -12,7 +12,7 @@
 *
 * \parser_pat.c
 * \brief
-* Datoteka deklarira funkcije i strukture potrebne za parsiranje PMT tablice
+* File defines functions needed for parsing PMT table
 * Made on 08.05.2018.
 *
 * @Author Jure Bajic
@@ -80,7 +80,7 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
 			((*(buffer + 15 + i * 5 + offset) << 8) + *(buffer + 16 + i * 5 + offset)) & 0x0FFF;
 			
 		currentPMT->streams[i].descriptor = (uint8_t)
-			(*(buffer + 17 + i * 5));
+			(*(buffer + 17 + i * 5 + offset));
 
 		offset += (currentPMT->streams + i)->ES_info_length;
 		numberOfBytesStreams -= (5 + (currentPMT->streams + i)->ES_info_length);

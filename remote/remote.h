@@ -12,7 +12,7 @@
 *
 * \player_tuner.h
 * \brief
-* Datoteka deklarira funkcije potrebne za danjiljskog upravljaca
+* File declares functions needed for remote functionalities
 * Made on 08.05.2018.
 *
 * @Author Jure Bajic
@@ -31,6 +31,27 @@
 #include <time.h>
 
 #define NUM_EVENTS  5
+
+enum remote_keys
+{
+    REM_CHANNEL_0 = 11,
+    REM_CHANNEL_1 = 2,
+    REM_CHANNEL_2 = 3,
+    REM_CHANNEL_3 = 4,
+    REM_CHANNEL_4 = 5,
+    REM_CHANNEL_5 = 6,
+    REM_CHANNEL_6 = 7,
+    REM_CHANNEL_7 = 8,
+    REM_CHANNEL_8 = 9,
+    REM_CHANNEL_9 = 10,
+    REM_MUTE = 60,
+    REM_CHANNEL_DOWN = 61,
+    REM_CHANNEL_UP = 62,
+    REM_VOLUME_UP = 63,
+    REM_VOLUME_DOWN = 64,
+    REM_EXIT = 102,
+    REM_INFO = 358
+};
 
 typedef struct _remote_loop_args {
     struct input_event* eventBuf;

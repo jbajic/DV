@@ -12,7 +12,7 @@
 *
 * \remote.c
 * \brief
-* Datoteka definra funckije potrebne za rad danjiljskog upravljaca
+* File defines functions needed for remote functionalities
 * Made on 09.05.2018.
 *
 * @Author Jure Bajic
@@ -187,16 +187,16 @@ void* initRemoteLoop(void* args)
             {
 				switch (remoteArgs->eventBuf[i].code) 
                 {
-                    case 1:
-                    case 2:
-                    case 3:
-                    case 4:
-                    case 5:
-                    case 6:
-                    case 7:
-                    case 8:
-                    case 9:
-                    case 10:
+                    case REM_CHANNEL_0:
+                    case REM_CHANNEL_1:
+                    case REM_CHANNEL_2:
+                    case REM_CHANNEL_3:
+                    case REM_CHANNEL_4:
+                    case REM_CHANNEL_5:
+                    case REM_CHANNEL_6:
+                    case REM_CHANNEL_7:
+                    case REM_CHANNEL_8:
+                    case REM_CHANNEL_9:
                     {
                         printf("Before calling timer %d\n", timeArgs.changeChannelArgs->channelNumber);
                         if (timeArgs.changeChannelArgs->channelNumber < 999)
@@ -208,19 +208,19 @@ void* initRemoteLoop(void* args)
                         }
                         break;
                     }	
-					case 62:
+					case REM_CHANNEL_UP:
                     {
 						changeChannelArgs.channelNumber = changeChannelArgs.currentChannel + 1;
                         changeChannel(&changeChannelArgs, &channelRemoveInfoTimer);
 						break;
                     }
-					case 61:
+					case REM_CHANNEL_DOWN:
                     {
 						changeChannelArgs.channelNumber = changeChannelArgs.currentChannel - 1;
                         changeChannel(&changeChannelArgs, &channelRemoveInfoTimer);
 						break;
                     }
-                    case 63:
+                    case REM_VOLUME_UP:
                     {
                         //volume up
                         if ((soundVolume + INT32_MAX * 0.1 ) <= INT32_MAX)
@@ -235,7 +235,7 @@ void* initRemoteLoop(void* args)
                         mute = FALSE;
                         break;
                     }
-                    case 64:
+                    case REM_VOLUME_DOWN:
                     {
                         //volume down
                         if (soundVolume != 0)
@@ -257,7 +257,7 @@ void* initRemoteLoop(void* args)
                         mute = FALSE;                        
                         break;
                     }
-                    case 60:
+                    case REM_MUTE:
                     {
                         //mute
                         if (mute)
@@ -272,13 +272,13 @@ void* initRemoteLoop(void* args)
                         }
                         break;
                     }
-					case 102:
+					case REM_EXIT:
                     {
                         //exit
                         exitRemote = TRUE;
 						break;
                     }
-                    case 358:
+                    case KEY_INFO:
                     {
                         //info
                         showChannelInfo(remoteArgs->graphicsStruct, changeChannelArgs.currentChannel, &channelRemoveInfoTimer);

@@ -93,7 +93,7 @@ int32_t setupData(player_handles* player_handles)
 
 void* threadPATParse(void* handles)
 {
-    setFilterToPAT(filterPATParserCallback, (player_handles*) handles);
+    setFilterToTable(filterPATParserCallback, (player_handles*) handles, pat_table_id, pat_table_pid);
     return NO_ERROR;
 }
 
@@ -101,14 +101,33 @@ int32_t setFilterToPAT(int32_t (*filterCallback)(uint8_t*), player_handles* hand
 {
     int32_t result;
     /* Set filter to demux */
-    result = Demux_Set_Filter(handles->playerHandle, 0x0000, 0x00, &handles->filterHandle);
+    result = Demux_Set_Filter(handles->playerHandle, 0x0000, pat_table_id, &handles->filterHandle);
     ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
     
     /* Register section filter callback */
     result = Demux_Register_Section_Filter_Callback(filterPATParserCallback);
     ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
 
-    while(!isPatTableParsed())
+    while (!isPatTableParsed())
+    {
+    }
+    freeFilterCallback(*filterCallback, handles);
+    //Alles gut PAT is parsed
+    return NO_ERROR;
+}
+
+int32_t setFilterToTable(int32_t (*filterCallback)(uint8_t*), player_handles* handles, int32_t tableId, int32_t tablePID)
+{
+    int32_t result;
+    /* Set filter to demux */
+    result = Demux_Set_Filter(handles->playerHandle, tableId, tablePID, &handles->filterHandle);
+    ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
+    
+    /* Register section filter callback */
+    result = Demux_Register_Section_Filter_Callback(filterCallback);
+    ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
+
+    while (!isPatTableParsed())
     {
     }
     freeFilterCallback(*filterCallback, handles);
@@ -126,17 +145,17 @@ int32_t setFilterToPMT(int32_t (*filterCallback)(uint8_t*), player_handles* hand
     printf("NUMERO OF PROGRAMO %d\n", patTable->number_of_programs);
     for (i = 0; i < patTable->number_of_programs - 1; i++)
     {
-        printf("NUMERO OF PROGRAMO2 %d\n", i);
+        // printf("NUMERO OF PROGRAMO2 %d\n", i);
         printf("PID %d\n", patTable->pat_programm[i + 1].programm_map_pid);
         /* Set filter to demux */
-        result = Demux_Set_Filter(handles->playerHandle, patTable->pat_programm[i + 1].programm_map_pid, 0x02, &handles->filterHandle);
+        result = Demux_Set_Filter(handles->playerHandle, patTable->pat_programm[i + 1].programm_map_pid, pmt_table_id, &handles->filterHandle);
         ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
         
         /* Register section filter callback */
         result = Demux_Register_Section_Filter_Callback(filterPMTParserCallback);
         ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
 
-        while(!isPmtTableParsed())
+        while (!isPmtTableParsed())
         {
         }
         freeFilterCallback(filterCallback, handles);

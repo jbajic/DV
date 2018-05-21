@@ -12,7 +12,7 @@
 *
 * \base.h
 * \brief
-* Datoteka s osnovnim funkcijama i makroima dostupni svim modulima
+* File with basic functions and macrois available throughtout all modules
 * Made on 08.05.2018.
 *
 * @Author Jure Bajic

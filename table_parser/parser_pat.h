@@ -12,7 +12,7 @@
 *
 * \parser_pat.c
 * \brief
-* Datoteka deklarira funkcije potrebne za parsiranje PAT tablice
+* File declares functions and structures needed for parsing PAT table
 * Made on 08.05.2018.
 *
 * @Author Jure Bajic
@@ -43,6 +43,8 @@ typedef struct _pat_table {
 	int32_t number_of_programs;
 	pat_programm* pat_programm;
 } pat_table;
+
+int32_t* parsePatTable();
 
 int32_t filterPATParserCallback(uint8_t*);
 

@@ -4,6 +4,9 @@
         "player_tuner.h": "c",
         "parser_pat.h": "c",
         "parser_pmt.h": "c",
-        "remote.h": "c"
+        "remote.h": "c",
+        "graphics.h": "c",
+        "base.h": "c",
+        "stdint.h": "c"
     }
 }

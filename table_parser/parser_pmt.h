@@ -12,7 +12,7 @@
 *
 * \parser_pat.h
 * \brief
-* Datoteka deklarira funkcije i strukture potrebne za parsiranje PMT tablice
+* File declares functions and structures needed for parsing PMT table
 * Made on 08.05.2018.
 *
 * @Author Jure Bajic
