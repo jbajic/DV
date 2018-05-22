@@ -87,6 +87,8 @@ int32_t setupData(player_handles* player_handles)
     pthread_create(&patParserId, NULL, threadPATParse, (void*) player_handles);
     pthread_join(patParserId, NULL);
     setFilterToPMT(filterPMTParserCallback, player_handles);
+    setFilterToTDT(filterTDTParserCallback, player_handles);
+    setFilterToTOT(filterTOTParserCallback, player_handles);
 
     return NO_ERROR;
 }
@@ -101,7 +103,7 @@ int32_t setFilterToPAT(int32_t (*filterCallback)(uint8_t*), player_handles* hand
 {
     int32_t result;
     /* Set filter to demux */
-    result = Demux_Set_Filter(handles->playerHandle, 0x0000, pat_table_id, &handles->filterHandle);
+    result = Demux_Set_Filter(handles->playerHandle, pat_table_pid, pat_table_id, &handles->filterHandle);
     ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
     
     /* Register section filter callback */
@@ -112,6 +114,48 @@ int32_t setFilterToPAT(int32_t (*filterCallback)(uint8_t*), player_handles* hand
     {
     }
     freeFilterCallback(*filterCallback, handles);
+    //Alles gut PAT is parsed
+    return NO_ERROR;
+}
+
+
+int32_t setFilterToTDT(int32_t (*filterCallback)(uint8_t*), player_handles* handles)
+{
+    int32_t result;
+    /* Set filter to demux */
+    result = Demux_Set_Filter(handles->playerHandle, tdt_and_tot_table_pid, tdt_table_id, &handles->filterHandle);
+    ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
+    
+    /* Register section filter callback */
+    result = Demux_Register_Section_Filter_Callback(filterTDTParserCallback);
+    ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
+
+    while (!isTDTTableParsed())
+    {
+    }
+    freeFilterCallback(*filterCallback, handles);
+    // freeFilterCallback(*filterCallback, handles);
+    //Alles gut PAT is parsed
+    return NO_ERROR;
+}
+
+
+int32_t setFilterToTOT(int32_t (*filterCallback)(uint8_t*), player_handles* handles)
+{
+    int32_t result;
+    /* Set filter to demux */
+    result = Demux_Set_Filter(handles->playerHandle, tdt_and_tot_table_pid, tot_table_id, &handles->filterHandle);
+    ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
+    
+    /* Register section filter callback */
+    result = Demux_Register_Section_Filter_Callback(filterTOTParserCallback);
+    ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
+
+    while (!isTOTTableParsed())
+    {
+    }
+    freeFilterCallback(*filterCallback, handles);
+    // freeFilterCallback(*filterCallback, handles);
     //Alles gut PAT is parsed
     return NO_ERROR;
 }

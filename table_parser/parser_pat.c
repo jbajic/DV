@@ -75,7 +75,7 @@ int32_t filterPATParserCallback(uint8_t* buffer)
 	// printf("broj bajtova u foru: %d\n", patTable.pat_header.section_length - 5 - 4);
 
 	isPATParsed = TRUE;
-    return 0;
+    return NO_ERROR;
 }
 
 int isPatTableParsed()

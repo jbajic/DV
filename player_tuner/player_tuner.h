@@ -27,6 +27,8 @@
 #include "./../init_configuration/init_configuration.h"
 #include "./../table_parser/parser_pat.h"
 #include "./../table_parser/parser_pmt.h"
+#include "./../table_parser/parser_tdt.h"
+#include "./../table_parser/parser_tot.h"
 
 #define ASSERT_TDP_RESULT(x,y)  if(NO_ERROR == x) \
                                     printf("%s success\n", y); \
@@ -77,6 +79,10 @@ int32_t setupData(player_handles*);
 int32_t setFilterToPAT(int32_t (*filterCallback)(uint8_t*), player_handles*);
 
 int32_t setFilterToPMT(int32_t (*filterCallback)(uint8_t*), player_handles*);
+
+int32_t setFilterToTDT(int32_t (*filterCallback)(uint8_t*), player_handles*);
+
+int32_t setFilterToTOT(int32_t (*filterCallback)(uint8_t*), player_handles*);
 
 int32_t setFilterToTable(int32_t (*filterCallback)(uint8_t*), player_handles*, int32_t, int32_t);
 

@@ -223,7 +223,7 @@ void* initRemoteLoop(void* args)
                     case REM_VOLUME_UP:
                     {
                         //volume up
-                        if ((soundVolume + INT32_MAX * 0.1 ) <= INT32_MAX)
+                        if ((soundVolume + INT32_MAX * 0.1) <= INT32_MAX)
                         {
                             printf("SOUND UP\n");
                             soundVolume += INT32_MAX * 0.1;
