@@ -2,6 +2,7 @@
 
 int32_t main(int argc, char** argv)
 {
+    pthread_t backgroundProcesses;
     player_handles* handles = (player_handles*) malloc(sizeof(player_handles));
     config_parameters* config = (config_parameters*) malloc(sizeof(config_parameters));
     graphics* graphicsStruct = (graphics*) malloc(sizeof(graphics));
@@ -19,9 +20,10 @@ int32_t main(int argc, char** argv)
 
     createStream(handles, config);
 
-    setupData(handles);
+    setupData(handles, &backgroundProcesses);
 
     startRemote(handles, graphicsStruct);
+    pthread_join(backgroundProcesses, NULL);
 
     removeStream(handles);
     stopPlayer(handles);

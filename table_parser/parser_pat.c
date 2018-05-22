@@ -78,7 +78,7 @@ int32_t filterPATParserCallback(uint8_t* buffer)
     return NO_ERROR;
 }
 
-int isPatTableParsed()
+int8_t isPatTableParsed()
 {
 	return isPATParsed;
 }

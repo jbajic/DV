@@ -74,7 +74,7 @@ int32_t createStream(player_handles*, config_parameters*);
 
 int32_t changeStream(player_handles*, int32_t);
 
-int32_t setupData(player_handles*);
+int32_t setupData(player_handles*, pthread_t*);
 
 int32_t setFilterToPAT(int32_t (*filterCallback)(uint8_t*), player_handles*);
 
@@ -84,7 +84,7 @@ int32_t setFilterToTDT(int32_t (*filterCallback)(uint8_t*), player_handles*);
 
 int32_t setFilterToTOT(int32_t (*filterCallback)(uint8_t*), player_handles*);
 
-int32_t setFilterToTable(int32_t (*filterCallback)(uint8_t*), player_handles*, int32_t, int32_t);
+int32_t setFilterToTable(int32_t (*filterCallback)(uint8_t*), int8_t (*isTableParsed)(), player_handles*, int32_t, int32_t);
 
 int32_t freeFilterCallback(int32_t (*filterCallback)(uint8_t*), player_handles*);
 
@@ -96,7 +96,7 @@ int32_t tunerDeinitialization();
 
 int32_t myPrivateTunerStatusCallback(t_LockStatus);
 
-void* threadPATParse();
+void* threadTDTAndTOTTableParse();
 
 int8_t getStreamType(uint8_t);
 

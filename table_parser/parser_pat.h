@@ -48,7 +48,7 @@ int32_t* parsePatTable();
 
 int32_t filterPATParserCallback(uint8_t*);
 
-int isPatTableParsed();
+int8_t isPatTableParsed();
 
 pat_table* getPATTable();
 

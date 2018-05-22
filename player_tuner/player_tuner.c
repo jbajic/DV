@@ -81,132 +81,48 @@ int32_t startPlayer(player_handles* handles)
     return NO_ERROR;
 }
 
-int32_t setupData(player_handles* player_handles)
+int32_t setupData(player_handles* player_handles, pthread_t* tdtTableParsing)
 {
-    pthread_t patParserId;
-    pthread_create(&patParserId, NULL, threadPATParse, (void*) player_handles);
-    pthread_join(patParserId, NULL);
-    setFilterToPMT(filterPMTParserCallback, player_handles);
-    setFilterToTDT(filterTDTParserCallback, player_handles);
-    setFilterToTOT(filterTOTParserCallback, player_handles);
+    int32_t i;
+    setFilterToTable(filterPATParserCallback, isPatTableParsed, player_handles, pat_table_pid, pat_table_id);
+    freeFilterCallback(filterPATParserCallback, player_handles);
 
-    return NO_ERROR;
-}
-
-void* threadPATParse(void* handles)
-{
-    setFilterToTable(filterPATParserCallback, (player_handles*) handles, pat_table_id, pat_table_pid);
-    return NO_ERROR;
-}
-
-int32_t setFilterToPAT(int32_t (*filterCallback)(uint8_t*), player_handles* handles)
-{
-    int32_t result;
-    /* Set filter to demux */
-    result = Demux_Set_Filter(handles->playerHandle, pat_table_pid, pat_table_id, &handles->filterHandle);
-    ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
-    
-    /* Register section filter callback */
-    result = Demux_Register_Section_Filter_Callback(filterPATParserCallback);
-    ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
-
-    while (!isPatTableParsed())
+    pat_table* patTable = getPATTable();
+    allocatePMTTables(patTable->number_of_programs);
+    for (i = 0; i < patTable->number_of_programs - 1; i++)
     {
+        setFilterToTable(filterPMTParserCallback, isPmtTableParsed, player_handles, patTable->pat_programm[i + 1].programm_map_pid, pmt_table_id);
+        freeFilterCallback(filterPMTParserCallback, player_handles);
+        setPmtTableParsedFalse();
     }
-    freeFilterCallback(*filterCallback, handles);
-    //Alles gut PAT is parsed
+    pthread_create(tdtTableParsing, NULL, threadTDTAndTOTTableParse, (void*) player_handles);
+
     return NO_ERROR;
 }
 
-
-int32_t setFilterToTDT(int32_t (*filterCallback)(uint8_t*), player_handles* handles)
+void* threadTDTAndTOTTableParse(void* handles)
 {
-    int32_t result;
-    /* Set filter to demux */
-    result = Demux_Set_Filter(handles->playerHandle, tdt_and_tot_table_pid, tdt_table_id, &handles->filterHandle);
-    ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
-    
-    /* Register section filter callback */
-    result = Demux_Register_Section_Filter_Callback(filterTDTParserCallback);
-    ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
+    setFilterToTable(filterTOTParserCallback, isTOTTableParsed, (player_handles*) handles, tdt_and_tot_table_pid, tot_table_id);
+    freeFilterCallback(filterTOTParserCallback, (player_handles*) handles);
 
-    while (!isTDTTableParsed())
-    {
-    }
-    freeFilterCallback(*filterCallback, handles);
-    // freeFilterCallback(*filterCallback, handles);
-    //Alles gut PAT is parsed
+    setFilterToTable(filterTDTParserCallback, isTDTTableParsed, (player_handles*) handles, tdt_and_tot_table_pid, tdt_table_id);
     return NO_ERROR;
 }
 
-
-int32_t setFilterToTOT(int32_t (*filterCallback)(uint8_t*), player_handles* handles)
+int32_t setFilterToTable(int32_t (*filterCallback)(uint8_t*), int8_t (*isTableParsed)(), player_handles* handles, int32_t tablePID, int32_t tableId)
 {
     int32_t result;
     /* Set filter to demux */
-    result = Demux_Set_Filter(handles->playerHandle, tdt_and_tot_table_pid, tot_table_id, &handles->filterHandle);
-    ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
-    
-    /* Register section filter callback */
-    result = Demux_Register_Section_Filter_Callback(filterTOTParserCallback);
-    ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
-
-    while (!isTOTTableParsed())
-    {
-    }
-    freeFilterCallback(*filterCallback, handles);
-    // freeFilterCallback(*filterCallback, handles);
-    //Alles gut PAT is parsed
-    return NO_ERROR;
-}
-
-int32_t setFilterToTable(int32_t (*filterCallback)(uint8_t*), player_handles* handles, int32_t tableId, int32_t tablePID)
-{
-    int32_t result;
-    /* Set filter to demux */
-    result = Demux_Set_Filter(handles->playerHandle, tableId, tablePID, &handles->filterHandle);
+    result = Demux_Set_Filter(handles->playerHandle, tablePID, tableId, &handles->filterHandle);
     ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
     
     /* Register section filter callback */
     result = Demux_Register_Section_Filter_Callback(filterCallback);
     ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
 
-    while (!isPatTableParsed())
+    while (!isTableParsed())
     {
     }
-    freeFilterCallback(*filterCallback, handles);
-    //Alles gut PAT is parsed
-    return NO_ERROR;
-}
-
-int32_t setFilterToPMT(int32_t (*filterCallback)(uint8_t*), player_handles* handles)
-{
-    int32_t result;
-    int i;
-    pat_table* patTable = getPATTable();
-    //allocate memory for pmt tables
-    allocatePMTTables(patTable->number_of_programs);
-    printf("NUMERO OF PROGRAMO %d\n", patTable->number_of_programs);
-    for (i = 0; i < patTable->number_of_programs - 1; i++)
-    {
-        // printf("NUMERO OF PROGRAMO2 %d\n", i);
-        printf("PID %d\n", patTable->pat_programm[i + 1].programm_map_pid);
-        /* Set filter to demux */
-        result = Demux_Set_Filter(handles->playerHandle, patTable->pat_programm[i + 1].programm_map_pid, pmt_table_id, &handles->filterHandle);
-        ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
-        
-        /* Register section filter callback */
-        result = Demux_Register_Section_Filter_Callback(filterPMTParserCallback);
-        ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
-
-        while (!isPmtTableParsed())
-        {
-        }
-        freeFilterCallback(filterCallback, handles);
-        setPmtTableParsedFalse();
-    }
-    printf("Alles parsed\n");
-    //Alles gut PMT are parsed
     return NO_ERROR;
 }
 
@@ -225,8 +141,8 @@ int32_t freeFilterCallback(int32_t (*filterCallback)(uint8_t*), player_handles* 
 int32_t createStream(player_handles* handles, config_parameters* config)
 {
     int32_t result;
-    printf("Create: vpid %d vtype %d\n", config->service.vpid, config->service.vtype);
-    printf("Create: apid %d atype %d\n", config->service.apid, config->service.atype);
+    // printf("Create: vpid %d vtype %d\n", config->service.vpid, config->service.vtype);
+    // printf("Create: apid %d atype %d\n", config->service.apid, config->service.atype);
     result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, config->service.vpid, getStreamType(config->service.vtype), &handles->videoStreamHandle);
     ASSERT_TDP_RESULT(result, "Player_Stream_Create");
 
@@ -285,7 +201,6 @@ int32_t stopPlayer(player_handles* handles)
     /* Deinit player */
     result = Player_Deinit(handles->playerHandle);
     ASSERT_TDP_RESULT(result, "Player_Deinit");
-    // free(handles);
 
     return NO_ERROR;
 }

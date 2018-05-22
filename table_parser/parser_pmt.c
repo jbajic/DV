@@ -99,7 +99,7 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
     return NO_ERROR;
 }
 
-int isPmtTableParsed()
+int8_t isPmtTableParsed()
 {
 	return isPMTTableParsed;
 }

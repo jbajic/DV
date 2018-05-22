@@ -46,7 +46,7 @@ typedef struct _pmt_table {
 
 int32_t filterPMTParserCallback(uint8_t*);
 
-int isPmtTableParsed();
+int8_t isPmtTableParsed();
 
 pmt_table* getPMTTable(int32_t channelNumber);
 
