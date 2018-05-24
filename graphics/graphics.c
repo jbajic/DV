@@ -12,12 +12,26 @@
 *
 * \graphics.h
 * \brief
-* Datoteka sadrzi definicije potrebnih funkcija za pokretanje grafickog sucelja
+* File defines all the needed function for starting graphics modules, and needed drawing
 * Made on 15.05.2018.
 *
 * @Author Jure Bajic
 *****************************************************************************/
 #include "graphics.h"
+
+static int32_t numberToDigitalClock[10][7] =
+{
+    {CLOCK_TOP_LINE, CLOCK_RIGHT_UPPER_LINE, CLOCK_RIGHT_LOWER_LINE, CLOCK_DOWN_LINE, CLOCK_LEFT_UPPER_LINE, CLOCK_LEFT_LOWER_LINE},//0
+    {CLOCK_RIGHT_UPPER_LINE, CLOCK_RIGHT_LOWER_LINE},//1
+    {CLOCK_TOP_LINE, CLOCK_RIGHT_UPPER_LINE, CLOCK_MIDDLE_LINE, CLOCK_LEFT_LOWER_LINE, CLOCK_DOWN_LINE},//2
+    {CLOCK_TOP_LINE, CLOCK_RIGHT_UPPER_LINE, CLOCK_MIDDLE_LINE, CLOCK_RIGHT_LOWER_LINE, CLOCK_DOWN_LINE},//3
+    {CLOCK_RIGHT_UPPER_LINE, CLOCK_RIGHT_LOWER_LINE, CLOCK_MIDDLE_LINE, CLOCK_LEFT_UPPER_LINE},//4
+    {CLOCK_TOP_LINE, CLOCK_LEFT_UPPER_LINE, CLOCK_MIDDLE_LINE, CLOCK_RIGHT_LOWER_LINE, CLOCK_DOWN_LINE},//5
+    {CLOCK_TOP_LINE, CLOCK_LEFT_UPPER_LINE, CLOCK_LEFT_LOWER_LINE, CLOCK_DOWN_LINE, CLOCK_RIGHT_LOWER_LINE, CLOCK_MIDDLE_LINE},//6
+    {CLOCK_TOP_LINE, CLOCK_RIGHT_UPPER_LINE, CLOCK_RIGHT_LOWER_LINE},//7
+    {CLOCK_TOP_LINE, CLOCK_RIGHT_UPPER_LINE, CLOCK_RIGHT_LOWER_LINE, CLOCK_DOWN_LINE, CLOCK_LEFT_UPPER_LINE, CLOCK_LEFT_LOWER_LINE, CLOCK_MIDDLE_LINE},//8
+	{CLOCK_TOP_LINE, CLOCK_RIGHT_UPPER_LINE, CLOCK_LEFT_UPPER_LINE, CLOCK_MIDDLE_LINE, CLOCK_RIGHT_LOWER_LINE}//9
+};
 
 int32_t initGraphics(graphics* graphicsStruct)
 {
@@ -58,7 +72,7 @@ int32_t drawChannelInfo(graphics* graphicsStruct, int32_t channelNumber, int8_t 
 	//clear surface
 	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x00));
 	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 0, 0, graphicsStruct->screenWidth, graphicsStruct->screenHeight));
-	
+
 	DFBCHECK(graphicsStruct->dfbInterface->CreateImageProvider(graphicsStruct->dfbInterface, "blackCircle.png", &provider));
 	DFBCHECK(provider->GetSurfaceDescription(provider, &graphicsStruct->surfaceDesc));
 	DFBCHECK(graphicsStruct->dfbInterface->CreateSurface(graphicsStruct->dfbInterface, &graphicsStruct->surfaceDesc, &logoSurface));
@@ -205,7 +219,7 @@ int32_t showReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t ch
 		boxX + boxPadding,  
 		boxY + boxPadding + 50 + fontDesc.height, DSTF_LEFT));
 
-	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0xFF, 0xFF));
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0xFF));
 	//OK
 	DFBCHECK(graphicsStruct->primary->DrawString(graphicsStruct->primary, CONFIRM_BUTTON, -1,
 		boxX + boxPadding + buttonWidth * 0.3,
@@ -217,6 +231,132 @@ int32_t showReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t ch
 		boxY + boxHeight - boxPadding - textPadding, DSTF_LEFT));
 
 	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
+
+	return NO_ERROR;
+}
+
+static int32_t changeColorIfNeeded(graphics* graphicsStruct, uint8_t number, enum digital_clock_lines clockLine)
+{
+	int32_t i;
+	int32_t numberOfClockLines = sizeof(numberToDigitalClock[number]) / sizeof(int32_t);
+	for (i = 0; i < numberOfClockLines; ++i)
+	{
+		if (numberToDigitalClock[number][i] == clockLine)
+		{
+			DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0xFF, 0xFF));
+			return NO_ERROR;
+		}
+		else
+		{
+			DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x55));
+		}
+	}
+	return NO_ERROR;
+}
+
+static int32_t getNumberFromTime(time_utc timeUtc, int32_t index)
+{
+	switch(index)
+	{
+		case 0:
+		{
+			return timeUtc.hours / 10;
+		}
+		case 1:
+		{
+			return timeUtc.hours % 10;
+		}
+		case 2:
+		{
+			return timeUtc.minutes / 10;
+		}
+		case 3:
+		{
+			return timeUtc.minutes % 10;
+		}
+		default:
+			return ERROR;
+	}
+}
+
+int32_t drawTime(graphics* graphicsStruct, time_utc timeUtc)
+{
+	float boxX, boxY, boxHeight, boxWidth, boxPadding, lineLength, lineWidness, linePadding, numberOffset, minutesOffset;
+	int32_t i, number;
+	//clear surface
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x00));
+	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 0, 0, graphicsStruct->screenWidth, graphicsStruct->screenHeight));
+
+	lineLength = 70;
+	lineWidness = 5;
+	linePadding = 8;
+	boxPadding = 40;
+	boxX = graphicsStruct->screenWidth - graphicsStruct->screenWidth * 0.3;
+	boxY = 20;
+	boxWidth = graphicsStruct->screenWidth * 0.3 - 20;
+	boxHeight = graphicsStruct->screenHeight * 0.25;
+	numberOffset = linePadding + lineLength + 30;
+	minutesOffset = 0;
+
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0xFF));
+    DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, boxX, boxY, boxWidth, boxHeight));
+
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0xFF, 0xFF));
+	//Draw dots
+	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary,
+			boxX + boxPadding  + numberOffset * 2 + lineLength * 0.3, boxPadding + lineLength + 10,
+			7, 7));
+	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary,
+			boxX + boxPadding + numberOffset * 2 + lineLength * 0.3, boxPadding + lineLength + 30,
+			7, 7));
+
+
+	for (i = 0; i < NUMBER_OF_DIGITS; ++i)
+	{
+		number = getNumberFromTime(timeUtc, i);
+		if (i >= 2)
+		{
+			minutesOffset = lineLength;
+		}
+		//top && bottom
+		changeColorIfNeeded(graphicsStruct, number, CLOCK_TOP_LINE);
+		DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary,
+			boxX + boxPadding + 10 + minutesOffset + numberOffset * i, boxPadding + 15,
+			lineLength - 20, lineWidness));
+		changeColorIfNeeded(graphicsStruct, number, CLOCK_DOWN_LINE);
+		DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary,
+			boxX + boxPadding + 10 + minutesOffset + numberOffset * i, boxPadding + lineLength * 2 + linePadding + 25,
+			lineLength - 20, lineWidness));
+
+		//middle
+		changeColorIfNeeded(graphicsStruct, number, CLOCK_MIDDLE_LINE);
+		DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary,
+		boxX + boxPadding + 10 + minutesOffset + numberOffset * i, boxPadding + lineLength + 25,
+		lineLength - 20, lineWidness));
+
+		//left
+		changeColorIfNeeded(graphicsStruct, number, CLOCK_LEFT_UPPER_LINE);
+		DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary,
+		boxX + boxPadding + minutesOffset + numberOffset * i, boxPadding + 20,
+		lineWidness, lineLength));
+		changeColorIfNeeded(graphicsStruct, number, CLOCK_LEFT_LOWER_LINE);
+		DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary,
+		boxX + boxPadding + minutesOffset + numberOffset * i, boxPadding + lineLength + linePadding + 20,
+		lineWidness, lineLength));
+
+		//right
+		changeColorIfNeeded(graphicsStruct, number, CLOCK_RIGHT_UPPER_LINE);
+		DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary,
+		boxX + boxPadding + lineLength + minutesOffset + numberOffset * i, boxPadding + 20,
+		lineWidness, lineLength));
+		changeColorIfNeeded(graphicsStruct, number, CLOCK_RIGHT_LOWER_LINE);
+		DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary,
+		boxX + boxPadding + lineLength + minutesOffset + numberOffset * i, boxPadding + lineLength + linePadding + 20,
+		lineWidness, lineLength));
+	}
+
+	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
+
 	return NO_ERROR;
 }
 

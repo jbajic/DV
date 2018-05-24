@@ -36,7 +36,12 @@
 **/
 #define CONFIRM_BUTTON "OK"
 #define DECLINE_BUTTON "NO"
-#define BOX_PADDING 20
+
+/**
+ * Clock
+ **/
+#define NUMBER_OF_CLOCK_LINES 7
+#define NUMBER_OF_DIGITS 4
 
 #define roundfunc(x) ((int) ((x) > 0.0 ? (x) + 0.5 : (x) - 0.5))
 #define DFBCHECK(x...)                                      \
@@ -49,6 +54,17 @@ if (err != DFB_OK)                                          \
     DirectFBErrorFatal( #x, err );                          \
   }                                                         \
 }
+
+enum digital_clock_lines
+{
+    CLOCK_TOP_LINE = 1,
+    CLOCK_RIGHT_UPPER_LINE = 2,
+    CLOCK_RIGHT_LOWER_LINE = 3,
+    CLOCK_DOWN_LINE = 4,
+    CLOCK_LEFT_UPPER_LINE = 5,
+    CLOCK_LEFT_LOWER_LINE = 6,
+    CLOCK_MIDDLE_LINE = 7
+};
 
 typedef struct _graphics
 {
@@ -66,6 +82,8 @@ int32_t drawChannelInfo(graphics*, int32_t, int8_t);
 int32_t drawSoundInfo(graphics*, uint32_t);
 
 int32_t showReminder(graphics*, int32_t, uint8_t);
+
+int32_t drawTime(graphics*, time_utc);
 
 int32_t deinitGraphics(graphics*);
 

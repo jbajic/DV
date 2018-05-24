@@ -370,6 +370,15 @@ void* initRemoteLoop(void* args)
                         showChannelInfo(remoteArgs->graphicsStruct, changeChannelArgs.currentChannel, &channelRemoveInfoTimer);
                         break;
                     }
+                    case REM_RED_BUTTON:
+                     {
+                        tdt_table* tdtTable = getTDTTable();
+                        printf("Draw time %d %d\n", tdtTable->dateTimeUTC.time.hours, tdtTable->dateTimeUTC.time.minutes);
+                        //read button for time
+                        drawTime(remoteArgs->graphicsStruct, tdtTable->dateTimeUTC.time);
+                        timer_settime(channelRemoveInfoTimer.timerId, channelRemoveInfoTimer.timerFlags, &channelRemoveInfoTimer.timerSpec, &channelRemoveInfoTimer.timerSpecOld);
+                        break;
+                     }
 				}
 			}	
         }

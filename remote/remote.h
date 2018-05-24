@@ -53,7 +53,8 @@ enum remote_keys
     REM_EXIT = 102,
     REM_ARROW_LEFT = 105,
     REM_ARROW_RIGHT = 106,
-    REM_INFO = 358
+    REM_INFO = 358,
+    REM_RED_BUTTON = 398
 };
 
 typedef struct _back_proc_args
