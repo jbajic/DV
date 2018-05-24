@@ -8,6 +8,8 @@
         "graphics.h": "c",
         "base.h": "c",
         "stdint.h": "c",
-        "background_processes.h": "c"
+        "background_processes.h": "c",
+        "pthread.h": "c",
+        "signal.h": "c"
     }
 }

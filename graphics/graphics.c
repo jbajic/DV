@@ -55,6 +55,10 @@ int32_t drawChannelInfo(graphics* graphicsStruct, int32_t channelNumber, int8_t 
 	char tekst[10];
 	sprintf(tekst, "Channel %d", channelNumber);
 
+	//clear surface
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x00));
+	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 0, 0, graphicsStruct->screenWidth, graphicsStruct->screenHeight));
+	
 	DFBCHECK(graphicsStruct->dfbInterface->CreateImageProvider(graphicsStruct->dfbInterface, "blackCircle.png", &provider));
 	DFBCHECK(provider->GetSurfaceDescription(provider, &graphicsStruct->surfaceDesc));
 	DFBCHECK(graphicsStruct->dfbInterface->CreateSurface(graphicsStruct->dfbInterface, &graphicsStruct->surfaceDesc, &logoSurface));
@@ -139,7 +143,7 @@ int32_t drawSoundInfo(graphics* graphicsStruct, uint32_t volume)
     return NO_ERROR;
 }
 
-int32_t showReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t defaultMarkedButton)
+int32_t showReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t chosenButton)
 {
 	printf("Show reminder\n");
 	char tekst1[] = "Reminder activated. Switch to";
@@ -169,8 +173,18 @@ int32_t showReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t de
     DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, boxX, boxY, boxWidth, boxHeight));
 
 	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0xFF));
-	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, buttonOneX, buttonOneY, buttonWidth, buttonHeight));
-	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, buttonTwoX, buttonTwoY, buttonWidth, buttonHeight));
+	if (chosenButton == 1)
+	{
+		DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, buttonTwoX, buttonTwoY, buttonWidth, buttonHeight));
+		DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0xFF, 0xFF));
+		DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, buttonOneX, buttonOneY, buttonWidth, buttonHeight));
+	}
+	else
+	{
+		DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, buttonOneX, buttonOneY, buttonWidth, buttonHeight));
+		DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0xFF, 0xFF));
+		DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, buttonTwoX, buttonTwoY, buttonWidth, buttonHeight));
+	}
 
 	IDirectFBFont *fontInterface = NULL;
 	DFBFontDescription fontDesc;
@@ -191,6 +205,7 @@ int32_t showReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t de
 		boxX + boxPadding,  
 		boxY + boxPadding + 50 + fontDesc.height, DSTF_LEFT));
 
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0xFF, 0xFF));
 	//OK
 	DFBCHECK(graphicsStruct->primary->DrawString(graphicsStruct->primary, CONFIRM_BUTTON, -1,
 		boxX + boxPadding + buttonWidth * 0.3,

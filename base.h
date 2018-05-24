@@ -24,6 +24,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <signal.h>
+#include <time.h>
+#include <linux/input.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #ifdef DEBUG
 #undef DEBUG

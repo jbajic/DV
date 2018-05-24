@@ -38,7 +38,6 @@
 #define DECLINE_BUTTON "NO"
 #define BOX_PADDING 20
 
-#define DEFAULT_MARKED_BUTTON 1
 #define roundfunc(x) ((int) ((x) > 0.0 ? (x) + 0.5 : (x) - 0.5))
 #define DFBCHECK(x...)                                      \
 {                                                           \

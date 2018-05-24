@@ -19,6 +19,8 @@
 *****************************************************************************/
 #include "remote.h"
 
+static reminder* activeReminder = NULL;
+
 static int32_t getKeys(int32_t count, uint8_t* buf, uint32_t* eventsRead, int32_t inputFileDesc)
 {
     int32_t ret = 0;
@@ -38,8 +40,7 @@ static int32_t getKeys(int32_t count, uint8_t* buf, uint32_t* eventsRead, int32_
 
 int32_t startRemote(player_handles* handles, graphics* graphicsStruct, reminder* reminderHead)
 {
-    pthread_t tdtThread;
-    pthread_t remoteThreadId;
+    pthread_t tdtThread, remoteThreadId;
     back_proc_args backgroundProc;
     const char* dev = "/dev/input/event0";
     char deviceName[20];
@@ -51,7 +52,7 @@ int32_t startRemote(player_handles* handles, graphics* graphicsStruct, reminder*
     if (args->inputFileDesc == -1)
     {
         printf("Error while opening device (%s) !", strerror(errno));
-	    //return ERROR;
+	    return ERROR;
     }
     
     ioctl(args->inputFileDesc, EVIOCGNAME(sizeof(deviceName)), deviceName);
@@ -61,7 +62,7 @@ int32_t startRemote(player_handles* handles, graphics* graphicsStruct, reminder*
     if (!args->eventBuf)
     {
         printf("Error allocating memory !");
-        //return ERROR;
+        return ERROR;
     }
 
     backgroundProc.graphicsStruct = graphicsStruct;
@@ -79,6 +80,7 @@ int32_t startRemote(player_handles* handles, graphics* graphicsStruct, reminder*
 static void clearScreen(void* args)
 {
     printf("Clear screen\n");
+    activeReminder = NULL;
     clearGraphics((graphics*) args);
 }
 
@@ -99,6 +101,7 @@ static void showChannelInfo(graphics* graphicsStruct, int32_t currentChannel, ti
         }
     }
     drawChannelInfo(graphicsStruct, currentChannel, isThereTeletext);
+    activeReminder = NULL;
     timer_settime(removeChannelInfo->timerId, removeChannelInfo->timerFlags, &removeChannelInfo->timerSpec, &removeChannelInfo->timerSpecOld);
 }
 
@@ -106,23 +109,24 @@ static void changeChannel(change_channel_args* changeChannelArgs, timer_struct* 
 {
     if (changeChannelArgs->channelNumber <= 0)
     {
-        printf("COndition 1\n");
+        printf("Condition 1\n");
         changeChannelArgs->currentChannel = changeChannelArgs->numberOfPrograms - 1;
     }
     else if (changeChannelArgs->channelNumber > changeChannelArgs->numberOfPrograms - 1)
     {
-        printf("COndition 2\n");
+        printf("Condition 2\n");
         changeChannelArgs->currentChannel = 1;
     }
     else
     {
-        printf("COndition 3\n");
+        printf("Condition 3\n");
         changeChannelArgs->currentChannel = changeChannelArgs->channelNumber;
     }
     printf("numberOfChannels %d\nchannel current %d\nchannelNumber %d\n", changeChannelArgs->numberOfPrograms, 
         changeChannelArgs->currentChannel, changeChannelArgs->channelNumber);
     changeStream(changeChannelArgs->handles, changeChannelArgs->currentChannel);
     changeChannelArgs->channelNumber = 0;
+    activeReminder = NULL;
     showChannelInfo(changeChannelArgs->graphicsStruct, changeChannelArgs->currentChannel, removeChannelInfoTimer);
 }
 
@@ -168,17 +172,19 @@ void* checkForTDTData(void* args)
 
             if (!isReminderTimeDetected && matchingReminder != NULL)
             {
-                printf("There is a reminder!!!!\n");
-                showReminder(backgroundProc->graphicsStruct, matchingReminder->channel_index, DEFAULT_MARKED_BUTTON);
+                activeReminder = matchingReminder;
+                showReminder(backgroundProc->graphicsStruct, matchingReminder->channel_index, 1);
             }
             if (matchingReminder != NULL)
             {
-                printf("It is true\n");
                 isReminderTimeDetected = TRUE;
             }
             else
             {
-                printf("It is not true\n");
+                if (isReminderTimeDetected)
+                {
+                    clearScreen(backgroundProc->graphicsStruct);
+                }
                 isReminderTimeDetected = FALSE;
             }
             setTDTTableNotParsed();
@@ -195,6 +201,9 @@ void* initRemoteLoop(void* args)
     int32_t exitRemote = FALSE;
     uint32_t i;
     uint32_t eventCnt;
+    uint8_t chosenButton = 1;
+    timer_struct channelRemoveInfoTimer, soundRemoveTimer;
+
     remote_loop_args* remoteArgs = (remote_loop_args*) args;
     Player_Volume_Get(remoteArgs->handles->playerHandle, &soundVolume);
 
@@ -205,16 +214,15 @@ void* initRemoteLoop(void* args)
     changeChannelArgs.graphicsStruct = remoteArgs->graphicsStruct;
     changeChannelArgs.numberOfPrograms = getPATTable()->number_of_programs;
 
-    timer_struct channelRemoveInfoTimer, soundRemoveTimer;
-    channelRemoveInfoTimer.timerFlags = 0;
-
     timer_channel_changer_args timeArgs;
     timeArgs.changeChannelArgs = &changeChannelArgs;
-    timeArgs.channelChangerTimer.timerFlags = 0;
     timeArgs.removeChannelInfoTimer = &channelRemoveInfoTimer;
 
+    // Timer when when chaging channel via numbers
     setupTimer(&timeArgs.channelChangerTimer, changeChannelNumber, (void*) &timeArgs, 2);
+    // Timer to remove channelInfo graphics
     setupTimer(&channelRemoveInfoTimer, clearScreen, (void*) remoteArgs->graphicsStruct, 3);
+    // Timer to remove soundInfo graphics
     setupTimer(&soundRemoveTimer, clearScreen, (void*) remoteArgs->graphicsStruct, 3);
 
     while(TRUE)
@@ -316,6 +324,40 @@ void* initRemoteLoop(void* args)
                         }
                         break;
                     }
+                    case REM_ARROW_LEFT:
+                    {
+                        if (activeReminder != NULL)
+                        {
+                            chosenButton = 1;
+                            showReminder(remoteArgs->graphicsStruct, activeReminder->channel_index, chosenButton);
+                        }
+                        break;
+                    }
+                    case REM_ARROW_RIGHT:
+                    {
+                        if (activeReminder != NULL)
+                        {
+                            chosenButton = 2;
+                            showReminder(remoteArgs->graphicsStruct, activeReminder->channel_index, chosenButton);
+                        }
+                        break;
+                    }
+                    case REM_OK:
+                    {
+                        if (activeReminder != NULL)
+                        {
+                            if (chosenButton == 1)
+                            {
+                                changeChannelArgs.channelNumber = activeReminder->channel_index;
+                                changeChannel(&changeChannelArgs, &channelRemoveInfoTimer);
+                            }
+                            else
+                            {
+                                clearGraphics(remoteArgs->graphicsStruct);
+                            }
+                        }
+                        break;
+                    }
 					case REM_EXIT:
                     {
                         //exit
@@ -339,5 +381,5 @@ void* initRemoteLoop(void* args)
     timer_delete(channelRemoveInfoTimer.timerId);
     timer_delete(soundRemoveTimer.timerId);
     timer_delete(timeArgs.channelChangerTimer.timerId);
-    return NULL;
+    return (void*) NO_ERROR;
 }

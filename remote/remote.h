@@ -44,12 +44,15 @@ enum remote_keys
     REM_CHANNEL_7 = 8,
     REM_CHANNEL_8 = 9,
     REM_CHANNEL_9 = 10,
+    REM_OK = 28,
     REM_MUTE = 60,
     REM_CHANNEL_DOWN = 61,
     REM_CHANNEL_UP = 62,
     REM_VOLUME_UP = 63,
     REM_VOLUME_DOWN = 64,
     REM_EXIT = 102,
+    REM_ARROW_LEFT = 105,
+    REM_ARROW_RIGHT = 106,
     REM_INFO = 358
 };
 
