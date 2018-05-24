@@ -81,7 +81,7 @@ int32_t drawChannelInfo(graphics*, int32_t, int8_t);
 
 int32_t drawSoundInfo(graphics*, uint32_t);
 
-int32_t showReminder(graphics*, int32_t, uint8_t);
+int32_t drawReminder(graphics*, int32_t, uint8_t);
 
 int32_t drawTime(graphics*, time_utc);
 

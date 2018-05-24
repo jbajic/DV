@@ -173,7 +173,7 @@ void* checkForTDTData(void* args)
             if (!isReminderTimeDetected && matchingReminder != NULL)
             {
                 activeReminder = matchingReminder;
-                showReminder(backgroundProc->graphicsStruct, matchingReminder->channel_index, 1);
+                drawReminder(backgroundProc->graphicsStruct, matchingReminder->channel_index, 1);
             }
             if (matchingReminder != NULL)
             {
@@ -329,7 +329,7 @@ void* initRemoteLoop(void* args)
                         if (activeReminder != NULL)
                         {
                             chosenButton = 1;
-                            showReminder(remoteArgs->graphicsStruct, activeReminder->channel_index, chosenButton);
+                            drawReminder(remoteArgs->graphicsStruct, activeReminder->channel_index, chosenButton);
                         }
                         break;
                     }
@@ -338,7 +338,7 @@ void* initRemoteLoop(void* args)
                         if (activeReminder != NULL)
                         {
                             chosenButton = 2;
-                            showReminder(remoteArgs->graphicsStruct, activeReminder->channel_index, chosenButton);
+                            drawReminder(remoteArgs->graphicsStruct, activeReminder->channel_index, chosenButton);
                         }
                         break;
                     }

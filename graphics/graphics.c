@@ -33,6 +33,18 @@ static int32_t numberToDigitalClock[10][7] =
 	{CLOCK_TOP_LINE, CLOCK_RIGHT_UPPER_LINE, CLOCK_LEFT_UPPER_LINE, CLOCK_MIDDLE_LINE, CLOCK_RIGHT_LOWER_LINE}//9
 };
 
+/****************************************************************************
+*
+* @brief
+* Function for initializin graphics structure
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
 int32_t initGraphics(graphics* graphicsStruct)
 {
     graphicsStruct->primary = NULL;
@@ -61,6 +73,20 @@ int32_t initGraphics(graphics* graphicsStruct)
     return NO_ERROR;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for drawing channel information
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*       channelNumber - [in] Number of channel
+*       isThereTeletext - [in] Integer indicating if the programm has teletext
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
 int32_t drawChannelInfo(graphics* graphicsStruct, int32_t channelNumber, int8_t isThereTeletext)
 {
 	IDirectFBImageProvider *provider;
@@ -105,6 +131,19 @@ int32_t drawChannelInfo(graphics* graphicsStruct, int32_t channelNumber, int8_t 
     return NO_ERROR;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for drawing sound information
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*       volume - [in] Volume
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
 int32_t drawSoundInfo(graphics* graphicsStruct, uint32_t volume)
 {
 	int32_t volumePercent = roundfunc(((float)volume / INT32_MAX) * 100);
@@ -157,7 +196,21 @@ int32_t drawSoundInfo(graphics* graphicsStruct, uint32_t volume)
     return NO_ERROR;
 }
 
-int32_t showReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t chosenButton)
+/****************************************************************************
+*
+* @brief
+* Function for drawing remidner dialog
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*       channelNumber - [in] Number of channel to switch
+*       chosenButton - [in] Chosen button (left or right)
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t drawReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t chosenButton)
 {
 	printf("Show reminder\n");
 	char tekst1[] = "Reminder activated. Switch to";
@@ -235,6 +288,20 @@ int32_t showReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t ch
 	return NO_ERROR;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for chanign color when drawing clock
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*       number - [in] Number of channel to check
+*       clockLine - [in] Enum of digital clock line
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
 static int32_t changeColorIfNeeded(graphics* graphicsStruct, uint8_t number, enum digital_clock_lines clockLine)
 {
 	int32_t i;
@@ -254,6 +321,19 @@ static int32_t changeColorIfNeeded(graphics* graphicsStruct, uint8_t number, enu
 	return NO_ERROR;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for chanign color when drawing clock
+*
+* @param
+*       timeUtc - [in] UTC time to show
+*       index - [in] Index which to return [0][1]:[2][3]
+*
+* @return
+*   ERROR, if there is error
+*   DIGIT, from 0 to 9
+****************************************************************************/
 static int32_t getNumberFromTime(time_utc timeUtc, int32_t index)
 {
 	switch(index)
@@ -279,6 +359,19 @@ static int32_t getNumberFromTime(time_utc timeUtc, int32_t index)
 	}
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for chanign color when drawing clock
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*       timeUtc - [in] Time to show on digital clock
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
 int32_t drawTime(graphics* graphicsStruct, time_utc timeUtc)
 {
 	float boxX, boxY, boxHeight, boxWidth, boxPadding, lineLength, lineWidness, linePadding, numberOffset, minutesOffset;
@@ -360,15 +453,38 @@ int32_t drawTime(graphics* graphicsStruct, time_utc timeUtc)
 	return NO_ERROR;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for clearing screen
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
 int32_t clearGraphics(graphics* graphicsStruct)
 {
-	printf("Clear screen\n");
 	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x00));
 	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 0, 0, graphicsStruct->screenWidth, graphicsStruct->screenHeight));
 	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
     return NO_ERROR;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for releasing graphics structure
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
 int32_t deinitGraphics(graphics* graphicsStruct)
 {
 	graphicsStruct->primary->Release(graphicsStruct->primary);
