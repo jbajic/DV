@@ -38,6 +38,20 @@ static int32_t getKeys(int32_t count, uint8_t* buf, uint32_t* eventsRead, int32_
     return NO_ERROR;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for initiating remote
+*
+* @param
+*   handles - [in] Player handles needed when initiating programm
+*   graphicsStruct - [in] Graphics struct for drawing informations
+*   reminderHead - [in] Head of reminder list
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
 int32_t startRemote(player_handles* handles, graphics* graphicsStruct, reminder* reminderHead)
 {
     pthread_t tdtThread, remoteThreadId;
@@ -77,6 +91,18 @@ int32_t startRemote(player_handles* handles, graphics* graphicsStruct, reminder*
     return NO_ERROR;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for clearing screen
+*
+* @param
+*   args - [in] Graphics struct
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
 static void clearScreen(void* args)
 {
     printf("Clear screen\n");
@@ -84,6 +110,21 @@ static void clearScreen(void* args)
     clearGraphics((graphics*) args);
 }
 
+
+/****************************************************************************
+*
+* @brief
+* Function for clearing screen
+*
+* @param
+*   graphicsStruct - [in] Graphics struct
+*   currentChannel - [in] Number of channel
+*   removeChannelInfo - [in] Timer structure for removing channel information
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
 static void showChannelInfo(graphics* graphicsStruct, int32_t currentChannel, timer_struct* removeChannelInfo)
 {
     printf("CHANNEL INFO\n\n\n");
@@ -105,6 +146,19 @@ static void showChannelInfo(graphics* graphicsStruct, int32_t currentChannel, ti
     timer_settime(removeChannelInfo->timerId, removeChannelInfo->timerFlags, &removeChannelInfo->timerSpec, &removeChannelInfo->timerSpecOld);
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for changing channel
+*
+* @param
+*   changeChannelArgs - [in] Change channel args struct needed for chancingn channel and initiaint timer when info is showed for removing the same
+*   removeChannelInfoTimer - [in] Timer for removing channel information
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
 static void changeChannel(change_channel_args* changeChannelArgs, timer_struct* removeChannelInfoTimer)
 {
     if (changeChannelArgs->channelNumber <= 0)
@@ -130,16 +184,35 @@ static void changeChannel(change_channel_args* changeChannelArgs, timer_struct* 
     showChannelInfo(changeChannelArgs->graphicsStruct, changeChannelArgs->currentChannel, removeChannelInfoTimer);
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for changing channel
+*
+* @param
+*   arg - [in] Containing struct for changing channel and timer for changing channel via numbers
+*
+****************************************************************************/
 static void changeChannelNumber(void* arg)
 {
     timer_channel_changer_args* timeArgs = (timer_channel_changer_args*) arg;
     printf("changeChannelNumber Full Channel %d\n", timeArgs->changeChannelArgs->channelNumber);
     changeChannel(timeArgs->changeChannelArgs, timeArgs->removeChannelInfoTimer);
-    // memset(&timeArgs->channelChangerTimer.timerSpec, 0, sizeof(timeArgs->channelChangerTimer.timerSpec));
-    // timer_settime(timeArgs->channelChangerTimer.timerId, 0, &timeArgs->channelChangerTimer.timerSpec,
-    //                              &timeArgs->channelChangerTimer.timerSpecOld);
 }
 
+
+/****************************************************************************
+*
+* @brief
+* Function for setuping timer
+*
+* @param
+*   timer_struct - [in] Structure containng all the timer inforamtion
+*   timerCallback - [in] Function to be called on timer execution
+*   timerArgs - [in] Arguments to forward to timer
+*   seconds - [in] Time until the execution of timer
+*
+****************************************************************************/
 static void setupTimer(timer_struct* timer, void (*timerCallback)(void*), void* timerArgs, int32_t seconds)
 {
     timer->timerFlags = 0;
@@ -155,6 +228,17 @@ static void setupTimer(timer_struct* timer, void (*timerCallback)(void*), void* 
     timer->timerSpec.it_value.tv_nsec = 0;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for checking for new TDT data
+*
+* @param
+*   args - [in] Structure containtg thread related information
+*
+* @return
+*   NO_ERROR, if there is no error
+****************************************************************************/
 void* checkForTDTData(void* args)
 {
     back_proc_args* backgroundProc = (back_proc_args*) args;
@@ -194,6 +278,18 @@ void* checkForTDTData(void* args)
     return NO_ERROR;
 }
 
+
+/****************************************************************************
+*
+* @brief
+* Function for initiating remote loop which handles remote related events
+*
+* @param
+*   args - [in] remoteArgs containing all neede variables, for graphics, changing programs and for reminders
+*
+* @return
+*   NO_ERROR, if there is no error
+****************************************************************************/
 void* initRemoteLoop(void* args)
 {
     uint32_t soundVolume;

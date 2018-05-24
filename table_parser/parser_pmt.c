@@ -94,17 +94,15 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
 			
 		currentPMT->streams[i].descriptor = (uint8_t)
 			(*(buffer + 17 + i * 5 + offset));
-
 		offset += (currentPMT->streams + i)->ES_info_length;
 		numberOfBytesStreams -= (5 + (currentPMT->streams + i)->ES_info_length);
 		if (numberOfBytesStreams <= 0)
         {
             break;
         }
-		// printf("PMT Parsing:\n");
 		// printf("stream type: %d\n", (currentPMT->streams + i)->stream_type);
 		// printf("elementary PID: %d\n", (currentPMT->streams + i)->elementary_PID);
-		// printf("ES info length: %d\n\n", (currentPMT->streams + i)->ES_info_length);
+		// printf("ES info length: %d\n", (currentPMT->streams + i)->ES_info_length);
     }
 	currentPMT->numberOfStreams = i;
 	currentPMTTableIndex++;

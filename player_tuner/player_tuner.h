@@ -40,6 +40,7 @@
                                 }
 
 #define FREQUENCY_MGH 1000000
+#define STREAM_NOT_FOUND 0
 
 typedef struct _player_handles {
     uint32_t playerHandle;
