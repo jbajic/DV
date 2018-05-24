@@ -109,7 +109,7 @@ int32_t filterTOTParserCallback(uint8_t* buffer)
 
         setDateFromMJD(&totTable.offsets[i].timeOfChange.date, offsetMJD);
 
-        // printf("OFFSET PARSED %d\n", i);
+        printf("OFFSET PARSED %d\n", i);
         // printf("countryCode: %s\n", totTable.offsets[i].countryCode);
         // printf("countryRegionId: %d\n", totTable.offsets[i].countryRegionId);
         // printf("localTimeOffsetPolarity: %d\n", totTable.offsets[i].localTimeOffsetPolarity);
@@ -121,8 +121,8 @@ int32_t filterTOTParserCallback(uint8_t* buffer)
         // printf("TIMEOFCHANGE SECONDS : %u\n", totTable.offsets[i].timeOfChange.time.seconds);
         // printf("localTimeOffset HOURS : %u\n", totTable.offsets[i].localTimeOffset.hours);
         // printf("localTimeOffset MINUTES: %u\n", totTable.offsets[i].localTimeOffset.minutes);
-        // printf("nextTimeOffset HOURS : %u\n", totTable.offsets[i].nextTimeOffset.hours);
-        // printf("nextTimeOffset MINUTES: %u\n", totTable.offsets[i].nextTimeOffset.minutes);
+        printf("nextTimeOffset HOURS : %u\n", totTable.offsets[i].nextTimeOffset.hours);
+        printf("nextTimeOffset MINUTES: %u\n", totTable.offsets[i].nextTimeOffset.minutes);
     }
 
     setDateFromMJD(&totTable.dateTimeUTC.date, mjd);
@@ -132,14 +132,14 @@ int32_t filterTOTParserCallback(uint8_t* buffer)
     // printf("descriptorLoopLength: %u\n", totTable.descriptorsLoopLength);
     // printf("descriptorLength: %u\n", totTable.descriptor.descriptorLength);
 
-    // printf("MJD : %d\n", mjd);
-    // printf("YEAR : %d\n", totTable.dateTimeUTC.date.year);
-    // printf("MONTH : %d\n", totTable.dateTimeUTC.date.month);
-    // printf("DAY : %d\n", totTable.dateTimeUTC.date.dayInMonth);
+    printf("MJD : %d\n", mjd);
+    printf("YEAR : %d\n", totTable.dateTimeUTC.date.year);
+    printf("MONTH : %d\n", totTable.dateTimeUTC.date.month);
+    printf("DAY : %d\n", totTable.dateTimeUTC.date.dayInMonth);
 
-    // printf("HOURS : %u\n", totTable.dateTimeUTC.time.hours);
-    // printf("MINUTES: %u\n", totTable.dateTimeUTC.time.minutes);
-    // printf("SECONDS : %u\n", totTable.dateTimeUTC.time.seconds);
+    printf("HOURS : %u\n", totTable.dateTimeUTC.time.hours);
+    printf("MINUTES: %u\n", totTable.dateTimeUTC.time.minutes);
+    printf("SECONDS : %u\n", totTable.dateTimeUTC.time.seconds);
     isTOTParsed = TRUE;
     return NO_ERROR;
 }
@@ -147,4 +147,9 @@ int32_t filterTOTParserCallback(uint8_t* buffer)
 int8_t isTOTTableParsed()
 {
     return isTOTParsed;
+}
+
+tot_table* getTOTTable()
+{
+    return &totTable;
 }

@@ -36,6 +36,26 @@
 #define TRUE 1
 #define FALSE 0
 
+typedef struct _time_utc
+{
+    uint8_t hours;
+    uint8_t minutes;
+    uint8_t seconds;
+} time_utc;
+
+typedef struct _date_tdt
+{
+    uint8_t dayInMonth;
+    uint8_t month;
+    uint32_t year;
+} date_tdt;
+
+typedef struct _datetime
+{
+    date_tdt date;
+    time_utc time;
+} datetime;
+
 typedef struct _timer_struct
 {
     timer_t timerId;

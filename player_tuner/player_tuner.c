@@ -12,7 +12,7 @@
 *
 * \player_tuner.c
 * \brief
-* Datoteka definira funkcije potrebne za rad tunera i playera
+* File defines functions needed for the tuner and the player
 * Made on 08.05.2018.
 *
 * @Author Jure Bajic
@@ -40,7 +40,7 @@ int32_t tunerInitialization(config_parameters* config)
     gettimeofday(&now, NULL);
     lockStatusWaitTime.tv_sec = now.tv_sec + 10;
 
-      /* Initialize tuner */
+    /* Initialize tuner */
     result = Tuner_Init();
     ASSERT_TDP_RESULT(result, "Tuner_Init");
     
@@ -81,33 +81,75 @@ int32_t startPlayer(player_handles* handles)
     return NO_ERROR;
 }
 
-int32_t setupData(player_handles* player_handles, pthread_t* tdtTableParsing)
+int32_t setupData(pthread_t* backgroundProcess, player_handles_mutex* threadArgs)
 {
     int32_t i;
-    setFilterToTable(filterPATParserCallback, isPatTableParsed, player_handles, pat_table_pid, pat_table_id);
-    freeFilterCallback(filterPATParserCallback, player_handles);
+    setFilterToTable(filterPATParserCallback, isPatTableParsed, threadArgs->handles, pat_table_pid, pat_table_id);
+    freeFilterCallback(filterPATParserCallback, threadArgs->handles);
 
     pat_table* patTable = getPATTable();
     allocatePMTTables(patTable->number_of_programs);
     for (i = 0; i < patTable->number_of_programs - 1; i++)
     {
-        setFilterToTable(filterPMTParserCallback, isPmtTableParsed, player_handles, patTable->pat_programm[i + 1].programm_map_pid, pmt_table_id);
-        freeFilterCallback(filterPMTParserCallback, player_handles);
+        setFilterToTable(filterPMTParserCallback, isPmtTableParsed, threadArgs->handles, patTable->pat_programm[i + 1].programm_map_pid, pmt_table_id);
+        freeFilterCallback(filterPMTParserCallback, threadArgs->handles);
         setPmtTableParsedFalse();
     }
-    pthread_create(tdtTableParsing, NULL, threadTDTAndTOTTableParse, (void*) player_handles);
+    pthread_create(backgroundProcess, NULL, threadTDTAndTOTTableParse, (void*) threadArgs);
 
     return NO_ERROR;
 }
 
-void* threadTDTAndTOTTableParse(void* handles)
+void* threadTDTAndTOTTableParse(void* args)
 {
-    setFilterToTable(filterTOTParserCallback, isTOTTableParsed, (player_handles*) handles, tdt_and_tot_table_pid, tot_table_id);
-    freeFilterCallback(filterTOTParserCallback, (player_handles*) handles);
+    // pthread_t tdtThread;
+    player_handles_mutex* threadArgs = (player_handles_mutex*) args;
+    setFilterToTable(filterTOTParserCallback, isTOTTableParsed, (player_handles*) threadArgs->handles, tdt_and_tot_table_pid, tot_table_id);
+    freeFilterCallback(filterTOTParserCallback, (player_handles*) threadArgs->handles);
 
-    setFilterToTable(filterTDTParserCallback, isTDTTableParsed, (player_handles*) handles, tdt_and_tot_table_pid, tdt_table_id);
+    setFilterToTable(filterTDTParserCallback, isTDTTableParsed, (player_handles*) threadArgs->handles, tdt_and_tot_table_pid, tdt_table_id);
+    // pthread_create(&tdtThread, NULL, checkForTDTData, (void*) threadArgs->channelReminders);
+
+    pthread_mutex_lock(&threadArgs->backgroundProcessesMutex);
+    printf("threadTDTAndTOTTableParse unlock\n");
+    // pthread_cancel(tdtThread);
+    freeFilterCallback(filterTDTParserCallback, (player_handles*) threadArgs->handles);
+    printf("threadTDTAndTOTTableParse finish unlock\n");
+    pthread_mutex_unlock(&threadArgs->backgroundProcessesMutex);
+    
     return NO_ERROR;
 }
+
+// void* checkForTDTData(void* args)
+// {
+//     uint8_t isReminderTimeDetecterd = FALSE;
+//     uint8_t isItTimeForReminder = FALSE;
+//     tdt_table* tdtTable = getTDTTable();
+//     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+//     while (TRUE)
+//     {
+//         if (isTDTTableParsed())
+//         {
+//             printf("Time Arrived\n");
+//             isItTimeForReminder = isThereTime((reminder*) args, tdtTable->dateTimeUTC.time);
+//             if (isItTimeForReminder)
+//             {
+//                 isReminderTimeDetecterd = TRUE;
+//             }
+//             else
+//             {
+//                 isReminderTimeDetecterd = FALSE;
+//             }
+//             if (!isReminderTimeDetecterd && isItTimeForReminder)
+//             {
+//                 // showReminder();
+//             }
+//             setTDTTableNotParsed();
+//         }
+//     }
+
+//     return NO_ERROR;
+// }
 
 int32_t setFilterToTable(int32_t (*filterCallback)(uint8_t*), int8_t (*isTableParsed)(), player_handles* handles, int32_t tablePID, int32_t tableId)
 {
@@ -157,15 +199,26 @@ int32_t changeStream(player_handles* handles, int32_t channelNumber)
     int32_t result;
     removeStream(handles);
     pmt_table* currentPmt = getPMTTable(channelNumber - 1);
-    result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
-        currentPmt->streams[0].elementary_PID, getStreamType(currentPmt->streams[0].stream_type), &handles->videoStreamHandle);
-    ASSERT_TDP_RESULT(result, "Player_Stream_Video_Change");
+    if (getStreamType(currentPmt->streams[0].stream_type))
+    {
+        result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
+            currentPmt->streams[0].elementary_PID, getStreamType(currentPmt->streams[0].stream_type), &handles->videoStreamHandle);
+        ASSERT_TDP_RESULT(result, "Player_Stream_Video_Change");
+    }
+    else
+    {
+        handles->videoStreamHandle = 0;
+    }
 
     if (getStreamType(currentPmt->streams[2].stream_type))
     {
         result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
             currentPmt->streams[2].elementary_PID, getStreamType(currentPmt->streams[2].stream_type), &handles->audioStreamHandle);
         ASSERT_TDP_RESULT(result, "Player_Stream_Audio_Change");
+    }
+    else
+    {
+        handles->audioStreamHandle = 0;
     }
 
     return NO_ERROR;
@@ -239,8 +292,8 @@ int8_t getStreamType(uint8_t streamType)
 			return VIDEO_TYPE_MPEG2;
 		case stream_audio:
 			return AUDIO_TYPE_MPEG_AUDIO;
-		case stream_private_sections:
-			return VIDEO_TYPE_MPEG2;
+		// case stream_private_sections:
+		// 	return VIDEO_TYPE_MPEG2;
 		default:
 			return 0;
 	}

@@ -7,6 +7,7 @@
         "remote.h": "c",
         "graphics.h": "c",
         "base.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "background_processes.h": "c"
     }
 }

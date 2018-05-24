@@ -44,18 +44,6 @@ int32_t initGraphics(graphics* graphicsStruct)
     DFBCHECK (graphicsStruct->primary->GetSize(graphicsStruct->primary, &graphicsStruct->screenWidth, &graphicsStruct->screenHeight));
     printf("xaxax4\n");
 
-    // IDirectFBFont *fontInterface = NULL;
-	// DFBFontDescription fontDesc;
-	
-    // /* specify the height of the font by raising the appropriate flag and setting the height value */
-	// fontDesc.flags = DFDESC_HEIGHT;
-	// fontDesc.height = 48;
-	// printf("xaxax5\n");
-    // /* create the font and set the created font for primary surface text drawing */
-	// DFBCHECK(graphicsStruct->dfbInterface->CreateFont(graphicsStruct->dfbInterface, "/home/galois/fonts/DejaVuSans.ttf", &fontDesc, &fontInterface));
-	// printf("xaxax6\n");
-	// DFBCHECK(graphicsStruct->primary->SetFont(graphicsStruct->primary, fontInterface));   
-	// printf("xaxax7\n");
     return NO_ERROR;
 }
 
@@ -139,7 +127,7 @@ int32_t drawSoundInfo(graphics* graphicsStruct, uint32_t volume)
 	DFBFontDescription fontDesc;
 	
 	fontDesc.flags = DFDESC_HEIGHT;
-	fontDesc.height = 40;
+	fontDesc.height = 50;
 	
 	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0xff));
 	DFBCHECK(graphicsStruct->dfbInterface->CreateFont(graphicsStruct->dfbInterface, "/home/galois/fonts/DejaVuSans.ttf", &fontDesc, &fontInterface));
@@ -149,6 +137,72 @@ int32_t drawSoundInfo(graphics* graphicsStruct, uint32_t volume)
 	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
     
     return NO_ERROR;
+}
+
+int32_t showReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t defaultMarkedButton)
+{
+	printf("Show reminder\n");
+	char tekst1[] = "Reminder activated. Switch to";
+	char tekst2[50];
+	float boxX, boxY, buttonWidth, buttonHeight, boxWidth, boxHeight, buttonOneX, buttonOneY, buttonTwoX, buttonTwoY, textPadding, boxPadding;
+	textPadding = 20;
+	boxPadding = 20;
+
+	boxX = graphicsStruct->screenWidth * 0.25;
+	boxY = graphicsStruct->screenHeight * 0.25;
+	boxWidth = graphicsStruct->screenWidth * 0.5;
+	boxHeight = graphicsStruct->screenHeight * 0.5;
+
+	buttonWidth = boxX - 1.5 * boxPadding;
+	buttonHeight = 70;
+	buttonOneX = boxX + boxPadding;
+	buttonOneY = boxY + boxHeight - boxPadding - buttonHeight;
+
+	buttonTwoX = graphicsStruct->screenWidth * 0.5 + 0.5 * boxPadding;
+	buttonTwoY = boxY + boxHeight - boxPadding - buttonHeight;
+	sprintf(tekst2, " channel %d?", channelNumber);
+	//clear surface
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x00));
+	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 0, 0, graphicsStruct->screenWidth, graphicsStruct->screenHeight));
+
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0xAA));
+    DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, boxX, boxY, boxWidth, boxHeight));
+
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0xFF));
+	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, buttonOneX, buttonOneY, buttonWidth, buttonHeight));
+	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, buttonTwoX, buttonTwoY, buttonWidth, buttonHeight));
+
+	IDirectFBFont *fontInterface = NULL;
+	DFBFontDescription fontDesc;
+	
+	fontDesc.flags = DFDESC_HEIGHT;
+	fontDesc.height = 50;
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0xFF, 0xFF));
+	
+	// DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0xff));
+	DFBCHECK(graphicsStruct->dfbInterface->CreateFont(graphicsStruct->dfbInterface, "/home/galois/fonts/DejaVuSans.ttf", &fontDesc, &fontInterface));
+	DFBCHECK(graphicsStruct->primary->SetFont(graphicsStruct->primary, fontInterface));
+
+	DFBCHECK(graphicsStruct->primary->DrawString(graphicsStruct->primary, tekst1, -1,
+		boxX + boxPadding,  
+		boxY + boxPadding + fontDesc.height, DSTF_LEFT));
+
+	DFBCHECK(graphicsStruct->primary->DrawString(graphicsStruct->primary, tekst2, -1,
+		boxX + boxPadding,  
+		boxY + boxPadding + 50 + fontDesc.height, DSTF_LEFT));
+
+	//OK
+	DFBCHECK(graphicsStruct->primary->DrawString(graphicsStruct->primary, CONFIRM_BUTTON, -1,
+		boxX + boxPadding + buttonWidth * 0.3,
+		boxY + boxHeight - boxPadding - textPadding, DSTF_LEFT));
+
+	//CANCEL
+	DFBCHECK(graphicsStruct->primary->DrawString(graphicsStruct->primary, DECLINE_BUTTON, -1,
+		boxX + boxWidth * 0.5 + 0.5 * boxPadding + buttonWidth * 0.3,
+		boxY + boxHeight - boxPadding - textPadding, DSTF_LEFT));
+
+	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
+	return NO_ERROR;
 }
 
 int32_t clearGraphics(graphics* graphicsStruct)

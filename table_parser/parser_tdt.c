@@ -52,7 +52,7 @@ int32_t filterTDTParserCallback(uint8_t* buffer)
 
     setDateFromMJD(&tdtTable.dateTimeUTC.date, mjd);
 
-    printf("TABLE ID: %u\n", tdtTable.tableId);
+    // printf("TABLE ID: %u\n", tdtTable.tableId);
     // printf("sectionSyntaxIndicator: %u\n", tdtTable.sectionSyntaxIndicator);
     // printf("reservedFutureUse: %u\n", tdtTable.reservedFutureUse);
     // printf("section_length: %u\n", tdtTable.section_length);
@@ -74,12 +74,22 @@ int8_t isTDTTableParsed()
     return isTDTParsed;
 }
 
+void setTDTTableNotParsed()
+{
+    isTDTParsed = FALSE;
+}
+
+tdt_table* getTDTTable()
+{
+    return &tdtTable;
+}
+
 void setDateFromMJD(date_tdt* dateStruct, uint16_t mjd)
 {
     int16_t k;
-    dateStruct->year = (int) ((mjd - 15078.2) / 365.25);
-    dateStruct->month = (int) ((mjd - 14956.1 - (dateStruct->year * 365.25)) / 30.6001);
-    dateStruct->dayInMonth = (uint8_t) (mjd - 14956 - ((int) dateStruct->year * 365.25) - ((int) dateStruct->month *  30.6001));
+    dateStruct->year = (int) ((mjd - (float) 15078.2) / 365.25);
+    dateStruct->month = (int) ((mjd - (float) 14956.1 - (dateStruct->year * (float) 365.25)) / (float) 30.6001);
+    dateStruct->dayInMonth = (uint8_t) (mjd - 14956 - (int) (dateStruct->year * (float) 365.25) - (int) (dateStruct->month *  (float) 30.6001));
     if (dateStruct->month == 14 || dateStruct->month == 15)
     {
         k = 1;

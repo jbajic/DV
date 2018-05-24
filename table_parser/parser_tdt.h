@@ -22,26 +22,6 @@
 
 #include "./../base.h"
 
-typedef struct _time_tdt
-{
-    uint8_t hours;
-    uint8_t minutes;
-    uint8_t seconds;
-} time_tdt;
-
-typedef struct _date_tdt
-{
-    int32_t dayInMonth;
-    int32_t month;
-    int32_t year;
-} date_tdt;
-
-typedef struct _datetime
-{
-    date_tdt date;
-    time_tdt time;
-} datetime;
-
 typedef struct _tdt_table {
     uint8_t tableId;
     uint8_t sectionSyntaxIndicator;
@@ -54,6 +34,10 @@ int8_t isTDTTableParsed();
 
 void setDateFromMJD(date_tdt*, uint16_t);
 
+void setTDTTableNotParsed();
+
 int32_t filterTDTParserCallback(uint8_t*);
+
+tdt_table* getTDTTable();
 
 #endif

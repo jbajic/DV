@@ -24,13 +24,15 @@
 
 typedef struct reminder
 {
-    uint16_t channel_index;
-    char* time;
+    int32_t channel_index;
+    time_utc time;
     struct reminder* next;
 } reminder;
 
-void addReminderTime(char**, reminder**);
+void addReminderTime(int32_t, int32_t, reminder**);
 
-void addReminderChannelIndex(uint16_t, reminder**);
+void addReminderChannelIndex(int32_t, reminder**);
+
+reminder* isThereTime(reminder*, time_utc);
 
 #endif

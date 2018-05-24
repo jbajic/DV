@@ -53,6 +53,12 @@ enum remote_keys
     REM_INFO = 358
 };
 
+typedef struct _back_proc_args
+{
+    graphics* graphicsStruct;
+    reminder* reminderHead;
+} back_proc_args;
+
 typedef struct _remote_loop_args {
     struct input_event* eventBuf;
     int32_t inputFileDesc;
@@ -76,9 +82,11 @@ typedef struct _timer_channel_changer_args
     timer_struct* removeChannelInfoTimer;
 } timer_channel_changer_args;
 
-int32_t startRemote(player_handles*, graphics*);
+int32_t startRemote(player_handles*, graphics*, reminder*);
 
 int32_t initRemote(struct input_event**, int32_t*);
+
+void* checkForTDTData(void*);
 
 void *initRemoteLoop(void*);
 

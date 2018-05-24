@@ -27,9 +27,9 @@ typedef struct _local_time_offset
     char countryCode[4];
     uint8_t countryRegionId;
     uint8_t localTimeOffsetPolarity;
-    time_tdt localTimeOffset;
+    time_utc localTimeOffset;
     datetime timeOfChange;
-    time_tdt nextTimeOffset;
+    time_utc nextTimeOffset;
 } local_time_offset;
 
 typedef struct _tot_descriptor
@@ -52,5 +52,7 @@ typedef struct _tot_table {
 int8_t isTOTTableParsed();
 
 int32_t filterTOTParserCallback(uint8_t*);
+
+tot_table* getTOTTable();
 
 #endif

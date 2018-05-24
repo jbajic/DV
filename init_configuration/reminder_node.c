@@ -19,12 +19,13 @@
 *****************************************************************************/
 #include "reminder_node.h"
 
-void addReminderTime(char** time, reminder** reminderHead)
+void addReminderTime(int32_t hours, int32_t minutes, reminder** reminderHead)
 {
     if (*(reminderHead) == NULL)
     {
         (*reminderHead) = (reminder*) malloc(sizeof (reminder));
-        (*reminderHead)->time = *time;
+        (*reminderHead)->time.hours = hours;
+        (*reminderHead)->time.minutes = minutes;
         (*reminderHead)->next = NULL;
     }
     else
@@ -35,12 +36,13 @@ void addReminderTime(char** time, reminder** reminderHead)
             newReminder = newReminder->next;
         }
         newReminder->next = (reminder*) malloc(sizeof (reminder));
-        newReminder->next->time = *(time);
+        newReminder->next->time.hours = hours;
+        newReminder->next->time.minutes = minutes;
         newReminder->next->next = NULL;
     }
 }
 
-void addReminderChannelIndex(uint16_t index, reminder** reminderHead)
+void addReminderChannelIndex(int32_t index, reminder** reminderHead)
 {
     reminder* newReminder = *(reminderHead);
     while (newReminder->next != NULL)
@@ -48,4 +50,20 @@ void addReminderChannelIndex(uint16_t index, reminder** reminderHead)
         newReminder = newReminder->next;
     }
     newReminder->channel_index = index;
+}
+
+reminder* isThereTime(reminder* reminderHead, time_utc utcTime)
+{
+    reminder* newReminder = reminderHead;
+    while (newReminder->next != NULL)
+    {
+        // printf("%d:%d == %d:%d\n", newReminder->time.hours, newReminder->time.minutes, utcTime.hours, utcTime.minutes);
+        if (newReminder->time.hours == utcTime.hours && newReminder->time.minutes == utcTime.minutes)
+        {
+            return newReminder;
+        }
+        newReminder = newReminder->next;
+    }
+    
+    return NULL;
 }

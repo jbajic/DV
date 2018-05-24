@@ -53,9 +53,10 @@ static int32_t keyFromString(char* key, t_symstruct* table, int32_t numberOfValu
 
 int32_t analyzeWord(char* word, FILE** filePointer, config_parameters* config)
 {
-    int character;
+    int32_t character;
     char* value = (char*) malloc(sizeof (char) * MAX_NUMBER_OF_ELEMENTS);
-    int valueCounter = 0;
+    int32_t hours, minutes;
+    int32_t valueCounter = 0;
     while ((character = fgetc(*filePointer)) != '<')
     {
         if (character == '\n') continue;
@@ -102,7 +103,9 @@ int32_t analyzeWord(char* word, FILE** filePointer, config_parameters* config)
         }
         case TIME_KEY:
         {
-            addReminderTime(&value, &config->headReminder);
+            hours = atoi(&value[0]);
+            minutes = atoi(&value[3]);
+            addReminderTime(hours, minutes, &config->headReminder);
             break;
         }
         case CHANNEL_INDEX_KEY:
@@ -129,6 +132,10 @@ int32_t loadFile(char** file_path, config_parameters* config)
     config->headReminder = NULL;
     
     filePointer = fopen(*file_path, "r");
+    if (filePointer == NULL)
+    {
+        return ERROR;
+    }
 
     while ((character = fgetc(filePointer)) != EOF)
     {
@@ -184,8 +191,8 @@ void testConfigPrintf(config_parameters* config)
     printf("vpid %d\n", config->service.vpid);
     printf("atype %d\n", config->service.atype);
     printf("vtype %d\n", config->service.vtype);
-    printf("reminder1 time %s\n", config->headReminder->time);
+    printf("reminder1 time %d:%d\n", config->headReminder->time.hours, config->headReminder->time.minutes);
     printf("reminder1 index %d\n", config->headReminder->channel_index);
-    printf("reminder2 time %s\n", config->headReminder->next->time);
+    printf("reminder2 time \"%d:%d\"\n", config->headReminder->next->time.hours, config->headReminder->next->time.minutes);
     printf("reminder2 index %d\n", config->headReminder->next->channel_index);
 }

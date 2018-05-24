@@ -12,7 +12,7 @@
 *
 * \player_tuner.h
 * \brief
-* Datoteka deklarira funkcije potrebne za rad tunera
+* File declares functions needed for the tuner
 * Made on 08.05.2018.
 *
 * @Author Jure Bajic
@@ -38,10 +38,7 @@
                                     textColor(0,7,0); \
                                     return -1; \
                                 }
-// #define TABLE_PAT_ID 0x00
-// #define TABLE_PMT_ID 0x02
-// #define TABLE_TDT_ID 0x70
-// #define TABLE_TOT_ID 0x73
+
 #define FREQUENCY_MGH 1000000
 
 typedef struct _player_handles {
@@ -51,6 +48,13 @@ typedef struct _player_handles {
     uint32_t audioStreamHandle;
     uint32_t filterHandle;
 } player_handles;
+
+typedef struct _player_handles_mutex
+{
+    player_handles* handles;
+    pthread_mutex_t backgroundProcessesMutex;
+    reminder* channelReminders;
+} player_handles_mutex;
 
 enum table_id
 {
@@ -74,15 +78,7 @@ int32_t createStream(player_handles*, config_parameters*);
 
 int32_t changeStream(player_handles*, int32_t);
 
-int32_t setupData(player_handles*, pthread_t*);
-
-int32_t setFilterToPAT(int32_t (*filterCallback)(uint8_t*), player_handles*);
-
-int32_t setFilterToPMT(int32_t (*filterCallback)(uint8_t*), player_handles*);
-
-int32_t setFilterToTDT(int32_t (*filterCallback)(uint8_t*), player_handles*);
-
-int32_t setFilterToTOT(int32_t (*filterCallback)(uint8_t*), player_handles*);
+int32_t setupData(pthread_t*, player_handles_mutex*);
 
 int32_t setFilterToTable(int32_t (*filterCallback)(uint8_t*), int8_t (*isTableParsed)(), player_handles*, int32_t, int32_t);
 
@@ -97,6 +93,8 @@ int32_t tunerDeinitialization();
 int32_t myPrivateTunerStatusCallback(t_LockStatus);
 
 void* threadTDTAndTOTTableParse();
+
+// void* checkForTDTData(void* args);
 
 int8_t getStreamType(uint8_t);
 

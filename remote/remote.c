@@ -36,9 +36,11 @@ static int32_t getKeys(int32_t count, uint8_t* buf, uint32_t* eventsRead, int32_
     return NO_ERROR;
 }
 
-int32_t startRemote(player_handles* handles, graphics* graphicsStruct)
+int32_t startRemote(player_handles* handles, graphics* graphicsStruct, reminder* reminderHead)
 {
+    pthread_t tdtThread;
     pthread_t remoteThreadId;
+    back_proc_args backgroundProc;
     const char* dev = "/dev/input/event0";
     char deviceName[20];
     remote_loop_args* args = (remote_loop_args*) malloc(sizeof(remote_loop_args));
@@ -46,7 +48,7 @@ int32_t startRemote(player_handles* handles, graphics* graphicsStruct)
     args->inputFileDesc = open(dev, O_RDWR);
     args->graphicsStruct = graphicsStruct;
 
-    if(args->inputFileDesc == -1)
+    if (args->inputFileDesc == -1)
     {
         printf("Error while opening device (%s) !", strerror(errno));
 	    //return ERROR;
@@ -56,12 +58,17 @@ int32_t startRemote(player_handles* handles, graphics* graphicsStruct)
 	printf("RC device opened succesfully [%s]\n", deviceName);
     
     args->eventBuf = (struct input_event*) malloc(NUM_EVENTS * sizeof(struct input_event));
-    if(!args->eventBuf)
+    if (!args->eventBuf)
     {
         printf("Error allocating memory !");
         //return ERROR;
     }
+
+    backgroundProc.graphicsStruct = graphicsStruct;
+    backgroundProc.reminderHead = reminderHead;
+
     pthread_create(&remoteThreadId, NULL, initRemoteLoop, args);
+    pthread_create(&tdtThread, NULL, checkForTDTData, &backgroundProc);
     pthread_join(remoteThreadId, NULL);
 
     free(args->eventBuf);
@@ -144,6 +151,43 @@ static void setupTimer(timer_struct* timer, void (*timerCallback)(void*), void* 
     timer->timerSpec.it_value.tv_nsec = 0;
 }
 
+void* checkForTDTData(void* args)
+{
+    back_proc_args* backgroundProc = (back_proc_args*) args;
+    int32_t isReminderTimeDetected = FALSE;
+    reminder* matchingReminder = NULL;
+    tdt_table* tdtTable = getTDTTable();
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    printf("reminder TDT time %d:%d\n", backgroundProc->reminderHead->time.hours, backgroundProc->reminderHead->time.minutes);
+    while (TRUE)
+    {
+        if (isTDTTableParsed())
+        {
+            printf("checkForTDTData Arrived %d:%d:%d\n", tdtTable->dateTimeUTC.time.hours, tdtTable->dateTimeUTC.time.minutes, tdtTable->dateTimeUTC.time.seconds);
+            matchingReminder = isThereTime((reminder*) backgroundProc->reminderHead, tdtTable->dateTimeUTC.time);
+
+            if (!isReminderTimeDetected && matchingReminder != NULL)
+            {
+                printf("There is a reminder!!!!\n");
+                showReminder(backgroundProc->graphicsStruct, matchingReminder->channel_index, DEFAULT_MARKED_BUTTON);
+            }
+            if (matchingReminder != NULL)
+            {
+                printf("It is true\n");
+                isReminderTimeDetected = TRUE;
+            }
+            else
+            {
+                printf("It is not true\n");
+                isReminderTimeDetected = FALSE;
+            }
+            setTDTTableNotParsed();
+        }
+    }
+
+    return NO_ERROR;
+}
+
 void* initRemoteLoop(void* args)
 {
     uint32_t soundVolume;
@@ -178,7 +222,7 @@ void* initRemoteLoop(void* args)
         if (getKeys(NUM_EVENTS, (uint8_t*)remoteArgs->eventBuf, &eventCnt, remoteArgs->inputFileDesc))
         {
 			printf("Error while reading input events !");
-			//return ERROR;
+			// return ERROR;
 		}
 
         for (i = 0; i < eventCnt; i++)
