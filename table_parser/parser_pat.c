@@ -22,6 +22,19 @@
 static pat_table patTable;
 static int isPATParsed = FALSE;
 
+/****************************************************************************
+*
+* @brief
+* Function for parsing PAT table
+*
+* @param
+*       buffer - [in] Pointer to the filtered incoming streamn which contains PAT table packets
+*
+* @return
+*   NO_ERROR, in case of no error
+*   ERROR, in case of error
+*
+****************************************************************************/
 int32_t filterPATParserCallback(uint8_t* buffer)
 {
     int i;
@@ -78,11 +91,30 @@ int32_t filterPATParserCallback(uint8_t* buffer)
     return NO_ERROR;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function informing other if PAT is parsed or not
+*
+* @return
+*   TRUE, if PAT is parsed
+*   FALSE, if PAT is not parsed
+*
+****************************************************************************/
 int8_t isPatTableParsed()
 {
 	return isPATParsed;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function fo returnig pointer to the parsed PAT table
+*
+* @return
+*   pat_table*
+*
+****************************************************************************/
 pat_table* getPATTable()
 {
 	return &patTable;

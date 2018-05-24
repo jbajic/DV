@@ -50,7 +50,7 @@ int8_t isPmtTableParsed();
 
 pmt_table* getPMTTable(int32_t channelNumber);
 
-void allocatePMTTables(int);
+void allocatePMTTables(int32_t);
 
 void setPmtTableParsedFalse();
 

@@ -10,9 +10,9 @@
 * TV aplikacija (Sifra: PPUTVIOS_07_2018_OS)
 * -----------------------------------------------------
 *
-* \parser_tdt.c
+* \parser_tot.c
 * \brief
-* File defines functions needed for parsing TDT table
+* File defines functions needed for parsing TOT table
 * Made on 21.05.2018.
 *
 * @Author Jure Bajic
@@ -22,6 +22,16 @@
 tot_table totTable;
 int8_t isTOTParsed = FALSE;
 
+/****************************************************************************
+*
+* @brief
+* Function for parsing TOT table
+*
+* @return
+*   NO_ERROR, in case of no error
+*   ERROR, in case of error
+*
+****************************************************************************/
 int32_t filterTOTParserCallback(uint8_t* buffer)
 {
     uint16_t mjd, numberOfLocales;
@@ -144,11 +154,33 @@ int32_t filterTOTParserCallback(uint8_t* buffer)
     return NO_ERROR;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function informing other if TOT is parsed or not
+*
+* @return
+*   TRUE, if TOT is parsed
+*   FALSE, if TOT is not parsed
+*
+****************************************************************************/
 int8_t isTOTTableParsed()
 {
     return isTOTParsed;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for returnig pointer to the parsed TOT table
+*
+* @param
+*       channelNumber - [in] Number of channel to return
+*
+* @return
+*   tot_table*
+*
+****************************************************************************/
 tot_table* getTOTTable()
 {
     return &totTable;

@@ -37,6 +37,21 @@ static t_symstruct modulesLookUpTable[] = {
 #define N_KEY_STREAM_TYPE_TABLE (sizeof (streamTypesLookUpTable) / sizeof (t_symstruct))
 #define N_KEY_MODULES_TABLE (sizeof (modulesLookUpTable) / sizeof (t_symstruct))
 
+/****************************************************************************
+*
+* @brief
+* Function searches through lookuptable in which certain keyword are bound to specific cases (enums)
+*
+* @param
+*       key - [in] Key of the case
+*       table - [in] Lookuptable in which the key should be found
+*       numberOfValues - [in] Number of values in the lookuptable
+*
+* @return
+*   NO_ERROR, in case of no error
+*   ERROR, in case of error
+*
+****************************************************************************/
 static int32_t keyFromString(char* key, t_symstruct* table, int32_t numberOfValues)
 {
     int32_t i;
@@ -51,6 +66,21 @@ static int32_t keyFromString(char* key, t_symstruct* table, int32_t numberOfValu
     return NON_EXISTENT_KEY;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function analyzes word and parses it into appropriate value
+*
+* @param
+*       word - [in] Field of characters representig possible key word
+*       filePointer - [in] Pointer to the opened file
+*       config - [in] Pointer to the config structure to which the parsed data will be written
+*
+* @return
+*   NO_ERROR, in case of no error
+*   ERROR, in case of error
+*
+****************************************************************************/
 int32_t analyzeWord(char* word, FILE** filePointer, config_parameters* config)
 {
     int32_t character;
@@ -117,11 +147,38 @@ int32_t analyzeWord(char* word, FILE** filePointer, config_parameters* config)
     return NO_ERROR;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function decides if the given string is a key word or not
+*
+* @param
+*       word - [in] Field of characters representig possible key word
+*
+* @return
+*   NO_ERROR, in case of no error
+*   ERROR, in case of error
+*
+****************************************************************************/
 static int32_t isNonValueKeyWord(char* word)
 {
     return strcmp("config", word) == 0 || strcmp("reminder", word) == 0 || strcmp("init_service", word) == 0;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function takes in file path from which it parses neccesary data for config file
+*
+* @param
+*       file_path - [in] Field of characters representig file path to config
+*       config - [in] Pointer to structure of config parameters
+*
+* @return
+*   NO_ERROR, in case of no error
+*   ERROR, in case of error
+*
+****************************************************************************/
 int32_t loadFile(char** file_path, config_parameters* config)
 {
     FILE* filePointer;

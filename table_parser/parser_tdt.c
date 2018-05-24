@@ -22,6 +22,19 @@
 tdt_table tdtTable;
 int8_t isTDTParsed = FALSE;
 
+/****************************************************************************
+*
+* @brief
+* Function for parsing TDT table
+*
+* @param
+*       buffer - [in] Pointer to the filtered incoming streamn which contains TDT table packets
+*
+* @return
+*   NO_ERROR, in case of no error
+*   ERROR, in case of error
+*
+****************************************************************************/
 int32_t filterTDTParserCallback(uint8_t* buffer)
 {
     uint16_t mjd;
@@ -69,21 +82,59 @@ int32_t filterTDTParserCallback(uint8_t* buffer)
     return NO_ERROR;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function informing other if TDT is parsed or not
+*
+* @return
+*   TRUE, if TDT is parsed
+*   FALSE, if TDT is not parsed
+*
+****************************************************************************/
 int8_t isTDTTableParsed()
 {
     return isTDTParsed;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for setting variable isTDTParsed to FALSE
+*
+****************************************************************************/
 void setTDTTableNotParsed()
 {
     isTDTParsed = FALSE;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for returnig pointer to the parsed TDT table
+*
+* @param
+*       channelNumber - [in] Number of channel to return
+*
+* @return
+*   tdt*
+*
+****************************************************************************/
 tdt_table* getTDTTable()
 {
     return &tdtTable;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for calculating date from MJD
+*
+* @param
+*       dateStruct - [in] Date struct in which calculated date will be written to
+*       mjd - [in] Modified Julian Date
+*
+****************************************************************************/
 void setDateFromMJD(date_tdt* dateStruct, uint16_t mjd)
 {
     int16_t k;

@@ -23,6 +23,19 @@ static pmt_table* pmtTables;
 static int isPMTTableParsed = FALSE;
 static int currentPMTTableIndex = 0;
 
+/****************************************************************************
+*
+* @brief
+* Function for parsing PMT table
+*
+* @param
+*       buffer - [in] Pointer to the filtered incoming streamn which contains PMT table packets
+*
+* @return
+*   NO_ERROR, in case of no error
+*   ERROR, in case of error
+*
+****************************************************************************/
 int32_t filterPMTParserCallback(uint8_t* buffer)
 {
     int i, maxNumberOfStreams, numberOfBytesStreams;
@@ -99,22 +112,61 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
     return NO_ERROR;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function informing other if PAT is parsed or not
+*
+* @return
+*   TRUE, if PAT is parsed
+*   FALSE, if PAT is not parsed
+*
+****************************************************************************/
 int8_t isPmtTableParsed()
 {
 	return isPMTTableParsed;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for setting variable isPMTTableParsed to FALSE
+*
+****************************************************************************/
 void setPmtTableParsedFalse()
 {
 	isPMTTableParsed = FALSE;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for returnig pointer to the parsed PMT table
+*
+* @param
+*       channelNumber - [in] Number of channel to return
+*
+* @return
+*   pmt_table*
+*
+****************************************************************************/
 pmt_table* getPMTTable(int32_t channelNumber)
 {
 	return &pmtTables[channelNumber];
 }
 
-void allocatePMTTables(int number_of_programs)
+/****************************************************************************
+*
+* @brief
+* Function for allocating memory for PMT tables
+* @param
+*       number_of_programs - [in] Number of programms to allocate
+*
+* @return
+*   pmt_table*
+*
+****************************************************************************/
+void allocatePMTTables(int32_t number_of_programs)
 {
     pmtTables = (pmt_table*) malloc(number_of_programs * sizeof(pmt_table));
 }
