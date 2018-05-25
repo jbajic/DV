@@ -94,6 +94,7 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
 			
 		currentPMT->streams[i].descriptor = (uint8_t)
 			(*(buffer + 17 + i * 5 + offset));
+
 		offset += (currentPMT->streams + i)->ES_info_length;
 		numberOfBytesStreams -= (5 + (currentPMT->streams + i)->ES_info_length);
 		if (numberOfBytesStreams <= 0)

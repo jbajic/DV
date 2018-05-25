@@ -19,6 +19,8 @@
 *****************************************************************************/
 #include "graphics.h"
 
+static pthread_mutex_t graphicsMutex = PTHREAD_MUTEX_INITIALIZER;
+
 static int32_t numberToDigitalClock[10][7] =
 {
     {CLOCK_TOP_LINE, CLOCK_RIGHT_UPPER_LINE, CLOCK_RIGHT_LOWER_LINE, CLOCK_DOWN_LINE, CLOCK_LEFT_UPPER_LINE, CLOCK_LEFT_LOWER_LINE},//0
@@ -47,6 +49,7 @@ static int32_t numberToDigitalClock[10][7] =
 ****************************************************************************/
 int32_t initGraphics(graphics* graphicsStruct)
 {
+	pthread_mutex_lock(&graphicsMutex);
     graphicsStruct->primary = NULL;
     graphicsStruct->dfbInterface = NULL;
     graphicsStruct->screenWidth = 0;
@@ -69,7 +72,7 @@ int32_t initGraphics(graphics* graphicsStruct)
     /* fetch the screen size */
     DFBCHECK (graphicsStruct->primary->GetSize(graphicsStruct->primary, &graphicsStruct->screenWidth, &graphicsStruct->screenHeight));
     printf("xaxax4\n");
-
+	pthread_mutex_unlock(&graphicsMutex);
     return NO_ERROR;
 }
 
@@ -89,6 +92,7 @@ int32_t initGraphics(graphics* graphicsStruct)
 ****************************************************************************/
 int32_t drawChannelInfo(graphics* graphicsStruct, int32_t channelNumber, int8_t isThereTeletext)
 {
+	pthread_mutex_lock(&graphicsMutex);
 	IDirectFBImageProvider *provider;
 	IDirectFBSurface *logoSurface = NULL;
 	int32_t logoHeight, logoWidth;
@@ -127,7 +131,7 @@ int32_t drawChannelInfo(graphics* graphicsStruct, int32_t channelNumber, int8_t 
 	}
     
 	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
-    
+    pthread_mutex_unlock(&graphicsMutex);
     return NO_ERROR;
 }
 
@@ -146,6 +150,7 @@ int32_t drawChannelInfo(graphics* graphicsStruct, int32_t channelNumber, int8_t 
 ****************************************************************************/
 int32_t drawSoundInfo(graphics* graphicsStruct, uint32_t volume)
 {
+	pthread_mutex_lock(&graphicsMutex);
 	int32_t volumePercent = roundfunc(((float)volume / INT32_MAX) * 100);
 	int32_t i;
 	char tekst[10];
@@ -193,6 +198,7 @@ int32_t drawSoundInfo(graphics* graphicsStruct, uint32_t volume)
 		graphicsStruct->screenWidth - 150,  graphicsStruct->screenHeight - 150, DSTF_LEFT));
 	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
     
+	pthread_mutex_unlock(&graphicsMutex);
     return NO_ERROR;
 }
 
@@ -212,6 +218,7 @@ int32_t drawSoundInfo(graphics* graphicsStruct, uint32_t volume)
 ****************************************************************************/
 int32_t drawReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t chosenButton)
 {
+	pthread_mutex_lock(&graphicsMutex);
 	printf("Show reminder\n");
 	char tekst1[] = "Reminder activated. Switch to";
 	char tekst2[50];
@@ -285,6 +292,7 @@ int32_t drawReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t ch
 
 	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
 
+	pthread_mutex_unlock(&graphicsMutex);
 	return NO_ERROR;
 }
 
@@ -305,7 +313,7 @@ int32_t drawReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t ch
 static int32_t changeColorIfNeeded(graphics* graphicsStruct, uint8_t number, enum digital_clock_lines clockLine)
 {
 	int32_t i;
-	int32_t numberOfClockLines = sizeof(numberToDigitalClock[number]) / sizeof(int32_t);
+	int32_t numberOfClockLines = NUMBER_OF_CLOCK_LINES;
 	for (i = 0; i < numberOfClockLines; ++i)
 	{
 		if (numberToDigitalClock[number][i] == clockLine)
@@ -318,6 +326,7 @@ static int32_t changeColorIfNeeded(graphics* graphicsStruct, uint8_t number, enu
 			DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x55));
 		}
 	}
+
 	return NO_ERROR;
 }
 
@@ -374,6 +383,7 @@ static int32_t getNumberFromTime(time_utc timeUtc, int32_t index)
 ****************************************************************************/
 int32_t drawTime(graphics* graphicsStruct, time_utc timeUtc)
 {
+	pthread_mutex_lock(&graphicsMutex);
 	float boxX, boxY, boxHeight, boxWidth, boxPadding, lineLength, lineWidness, linePadding, numberOffset, minutesOffset;
 	int32_t i, number;
 	//clear surface
@@ -449,7 +459,8 @@ int32_t drawTime(graphics* graphicsStruct, time_utc timeUtc)
 	}
 
 	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
-
+	
+	pthread_mutex_unlock(&graphicsMutex);
 	return NO_ERROR;
 }
 
@@ -467,9 +478,11 @@ int32_t drawTime(graphics* graphicsStruct, time_utc timeUtc)
 ****************************************************************************/
 int32_t clearGraphics(graphics* graphicsStruct)
 {
+	pthread_mutex_lock(&graphicsMutex);
 	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x00));
 	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 0, 0, graphicsStruct->screenWidth, graphicsStruct->screenHeight));
 	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
+	pthread_mutex_unlock(&graphicsMutex);
     return NO_ERROR;
 }
 
@@ -487,8 +500,10 @@ int32_t clearGraphics(graphics* graphicsStruct)
 ****************************************************************************/
 int32_t deinitGraphics(graphics* graphicsStruct)
 {
+	pthread_mutex_lock(&graphicsMutex);
 	graphicsStruct->primary->Release(graphicsStruct->primary);
 	graphicsStruct->dfbInterface->Release(graphicsStruct->dfbInterface);
-
+	
+	pthread_mutex_unlock(&graphicsMutex);
 	return NO_ERROR;
 }

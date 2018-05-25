@@ -44,9 +44,23 @@ typedef struct _pat_table {
 	pat_programm* pat_programm;
 } pat_table;
 
+
 int32_t* parsePatTable();
 
-int32_t filterPATParserCallback(uint8_t*);
+/****************************************************************************
+*
+* @brief
+* Function for parsing PAT table
+*
+* @param
+*       buffer - [in] Pointer to the filtered incoming streamn which contains PAT table packets
+*
+* @return
+*   NO_ERROR, in case of no error
+*   ERROR, in case of error
+*
+****************************************************************************/
+int32_t filterPATParserCallback(uint8_t* buffer);
 
 int8_t isPatTableParsed();
 

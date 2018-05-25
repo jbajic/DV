@@ -69,4 +69,10 @@ typedef struct _timer_struct
     int32_t timerFlags;
 } timer_struct;
 
+typedef struct thread_args
+{
+    pthread_mutex_t mutex;
+    pthread_cond_t condition;
+} thread_args;
+
 #endif

@@ -50,12 +50,17 @@ typedef struct _player_handles {
     uint32_t filterHandle;
 } player_handles;
 
-typedef struct _player_handles_mutex
+typedef struct _player_handles_reminders
 {
     player_handles* handles;
-    pthread_mutex_t backgroundProcessesMutex;
     reminder* channelReminders;
-} player_handles_mutex;
+} player_handles_reminders;
+
+typedef struct _player_handles_thread_args
+{
+    player_handles* handles;
+    thread_args* threadArguments;
+} player_handles_thread_args;
 
 enum table_id
 {
@@ -141,7 +146,7 @@ int32_t changeStream(player_handles* handles, int32_t channelNumber);
 *   ERROR, if there is error
 *   NO_ERROR, if there is no error
 ****************************************************************************/
-int32_t setupData(pthread_t* backgroundProcess, player_handles_mutex* threadArgs);
+int32_t setupData(player_handles* handles, thread_args* threadArguments);
 
 /****************************************************************************
 *

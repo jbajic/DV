@@ -2,15 +2,11 @@
 
 int32_t main(int argc, char** argv)
 {
-    pthread_t backgroundProcesses;
-    player_handles_mutex threadArgs;
-    threadArgs.handles = (player_handles*) malloc(sizeof(player_handles));
+    thread_args threadArguments = {.mutex = PTHREAD_MUTEX_INITIALIZER, .condition = PTHREAD_COND_INITIALIZER};
+    //contains palyer handles and remidner head
+    player_handles_reminders playerHandlesReminders;
+    playerHandlesReminders.handles = (player_handles*) malloc(sizeof(player_handles));
 
-    // threadArgs.backgroundProcessesMutex = PTHREAD_MUTEX_INITIALIZER;
-    pthread_mutex_init(&threadArgs.backgroundProcessesMutex, NULL);
-    pthread_mutex_lock(&threadArgs.backgroundProcessesMutex);
-
-    // player_handles* handles = (player_handles*) malloc(sizeof(player_handles));
     config_parameters* config = (config_parameters*) malloc(sizeof(config_parameters));
     graphics* graphicsStruct = (graphics*) malloc(sizeof(graphics));
     if (argc <= 1) 
@@ -20,27 +16,28 @@ int32_t main(int argc, char** argv)
     }
     loadFile(&argv[1], config);
     testConfigPrintf(config);
-    threadArgs.channelReminders = config->headReminder;
+    playerHandlesReminders.channelReminders = config->headReminder;
     tunerInitialization(config);
 
-    startPlayer(threadArgs.handles);
+    startPlayer(playerHandlesReminders.handles);
     
     initGraphics(graphicsStruct);
 
-    createStream(threadArgs.handles, config);
+    createStream(playerHandlesReminders.handles, config);
 
-    setupData(&backgroundProcesses, &threadArgs);
-    startRemote(threadArgs.handles, graphicsStruct, config->headReminder);
-    pthread_mutex_unlock(&threadArgs.backgroundProcessesMutex);
-    pthread_join(backgroundProcesses, NULL);
+    setupData(playerHandlesReminders.handles, &threadArguments);
+    startRemote(playerHandlesReminders.handles, graphicsStruct, config->headReminder);
 
-    removeStream(threadArgs.handles);
-    stopPlayer(threadArgs.handles);
+    removeStream(playerHandlesReminders.handles);
+    printf("Condition\n");
+    pthread_cond_signal(&threadArguments.condition);
+
+    stopPlayer(playerHandlesReminders.handles);
     deinitGraphics(graphicsStruct);
     tunerDeinitialization();
 
     free(config);
-    free(threadArgs.handles);
+    free(playerHandlesReminders.handles);
     free(graphicsStruct);
     
     return NO_ERROR;

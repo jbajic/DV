@@ -55,14 +55,13 @@ static int32_t getKeys(int32_t count, uint8_t* buf, uint32_t* eventsRead, int32_
 int32_t startRemote(player_handles* handles, graphics* graphicsStruct, reminder* reminderHead)
 {
     pthread_t tdtThread, remoteThreadId;
-    back_proc_args backgroundProc;
+    back_proc_args backgroundProc = {.graphicsStruct = graphicsStruct, .reminderHead = reminderHead};
     const char* dev = "/dev/input/event0";
     char deviceName[20];
     remote_loop_args* args = (remote_loop_args*) malloc(sizeof(remote_loop_args));
     args->handles = handles;
     args->inputFileDesc = open(dev, O_RDWR);
     args->graphicsStruct = graphicsStruct;
-
     if (args->inputFileDesc == -1)
     {
         printf("Error while opening device (%s) !", strerror(errno));
@@ -79,13 +78,11 @@ int32_t startRemote(player_handles* handles, graphics* graphicsStruct, reminder*
         return ERROR;
     }
 
-    backgroundProc.graphicsStruct = graphicsStruct;
-    backgroundProc.reminderHead = reminderHead;
-
     pthread_create(&remoteThreadId, NULL, initRemoteLoop, args);
     pthread_create(&tdtThread, NULL, checkForTDTData, &backgroundProc);
     pthread_join(remoteThreadId, NULL);
-
+    pthread_cancel(tdtThread);
+    printf("ladida\n");
     free(args->eventBuf);
     free(args);
     return NO_ERROR;
@@ -199,7 +196,6 @@ static void changeChannelNumber(void* arg)
     changeChannel(timeArgs->changeChannelArgs, timeArgs->removeChannelInfoTimer);
 }
 
-
 /****************************************************************************
 *
 * @brief
@@ -240,11 +236,11 @@ static void setupTimer(timer_struct* timer, void (*timerCallback)(void*), void* 
 ****************************************************************************/
 void* checkForTDTData(void* args)
 {
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     back_proc_args* backgroundProc = (back_proc_args*) args;
     int32_t isReminderTimeDetected = FALSE;
     reminder* matchingReminder = NULL;
     tdt_table* tdtTable = getTDTTable();
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     printf("reminder TDT time %d:%d\n", backgroundProc->reminderHead->time.hours, backgroundProc->reminderHead->time.minutes);
     while (TRUE)
     {
@@ -298,7 +294,6 @@ void* initRemoteLoop(void* args)
     uint32_t eventCnt;
     uint8_t chosenButton = 1;
     timer_struct channelRemoveInfoTimer, soundRemoveTimer;
-
     remote_loop_args* remoteArgs = (remote_loop_args*) args;
     Player_Volume_Get(remoteArgs->handles->playerHandle, &soundVolume);
 
@@ -319,6 +314,7 @@ void* initRemoteLoop(void* args)
     setupTimer(&channelRemoveInfoTimer, clearScreen, (void*) remoteArgs->graphicsStruct, 3);
     // Timer to remove soundInfo graphics
     setupTimer(&soundRemoveTimer, clearScreen, (void*) remoteArgs->graphicsStruct, 3);
+    printf("remote initiate loop4\n");
 
     while(TRUE)
     {
@@ -479,6 +475,7 @@ void* initRemoteLoop(void* args)
         }
         if (exitRemote)
         {
+            //stop
             break;
         }
     }

@@ -64,21 +64,23 @@ static int32_t myPrivateTunerStatusCallback(t_LockStatus status)
 ****************************************************************************/
 static void* threadTDTAndTOTTableParse(void* args)
 {
-    // pthread_t tdtThread;
-    player_handles_mutex* threadArgs = (player_handles_mutex*) args;
-    setFilterToTable(filterTOTParserCallback, isTOTTableParsed, (player_handles*) threadArgs->handles, tdt_and_tot_table_pid, tot_table_id);
-    freeFilterCallback(filterTOTParserCallback, (player_handles*) threadArgs->handles);
+    printf("threadTDTAndTOTTableParse1\n");
+    player_handles_thread_args* threadTOTAndTDTArgs = (player_handles_thread_args*) args;
+    printf("threadTDTAndTOTTableParse3\n");
+    setFilterToTable(filterTOTParserCallback, isTOTTableParsed, threadTOTAndTDTArgs->handles, tdt_and_tot_table_pid, tot_table_id);
+    printf("threadTDTAndTOTTableParse2\n");
+    freeFilterCallback(filterTOTParserCallback, threadTOTAndTDTArgs->handles);
 
-    setFilterToTable(filterTDTParserCallback, isTDTTableParsed, (player_handles*) threadArgs->handles, tdt_and_tot_table_pid, tdt_table_id);
+    setFilterToTable(filterTDTParserCallback, isTDTTableParsed, threadTOTAndTDTArgs->handles, tdt_and_tot_table_pid, tdt_table_id);
     // pthread_create(&tdtThread, NULL, checkForTDTData, (void*) threadArgs->channelReminders);
-
-    pthread_mutex_lock(&threadArgs->backgroundProcessesMutex);
+    printf("started tdt\n");
+    pthread_mutex_lock(&threadTOTAndTDTArgs->threadArguments->mutex);
     printf("threadTDTAndTOTTableParse unlock\n");
-    // pthread_cancel(tdtThread);
-    freeFilterCallback(filterTDTParserCallback, (player_handles*) threadArgs->handles);
+    pthread_cond_wait( &threadTOTAndTDTArgs->threadArguments->condition, &threadTOTAndTDTArgs->threadArguments->mutex ); 
+    freeFilterCallback(filterTDTParserCallback, threadTOTAndTDTArgs->handles);
     printf("threadTDTAndTOTTableParse finish unlock\n");
-    pthread_mutex_unlock(&threadArgs->backgroundProcessesMutex);
-    
+    pthread_mutex_unlock(&threadTOTAndTDTArgs->threadArguments->mutex);
+    free(threadTOTAndTDTArgs);
     return NO_ERROR;
 }
 
@@ -188,21 +190,26 @@ int32_t startPlayer(player_handles* handles)
 *   ERROR, if there is error
 *   NO_ERROR, if there is no error
 ****************************************************************************/
-int32_t setupData(pthread_t* backgroundProcess, player_handles_mutex* threadArgs)
+int32_t setupData(player_handles* handles, thread_args* threadArguments)
 {
     int32_t i;
-    setFilterToTable(filterPATParserCallback, isPatTableParsed, threadArgs->handles, pat_table_pid, pat_table_id);
-    freeFilterCallback(filterPATParserCallback, threadArgs->handles);
+    pthread_t threadTDTAndTOTTableParseThread;
+    player_handles_thread_args* threadTOTAndTDTArgs = (player_handles_thread_args*) malloc(sizeof(player_handles_thread_args));
+    threadTOTAndTDTArgs->handles = handles;
+    threadTOTAndTDTArgs->threadArguments = threadArguments;
+
+    setFilterToTable(filterPATParserCallback, isPatTableParsed, handles, pat_table_pid, pat_table_id);
+    freeFilterCallback(filterPATParserCallback, handles);
 
     pat_table* patTable = getPATTable();
     allocatePMTTables(patTable->number_of_programs);
     for (i = 0; i < patTable->number_of_programs - 1; i++)
     {
-        setFilterToTable(filterPMTParserCallback, isPmtTableParsed, threadArgs->handles, patTable->pat_programm[i + 1].programm_map_pid, pmt_table_id);
-        freeFilterCallback(filterPMTParserCallback, threadArgs->handles);
+        setFilterToTable(filterPMTParserCallback, isPmtTableParsed, handles, patTable->pat_programm[i + 1].programm_map_pid, pmt_table_id);
+        freeFilterCallback(filterPMTParserCallback, handles);
         setPmtTableParsedFalse();
     }
-    pthread_create(backgroundProcess, NULL, threadTDTAndTOTTableParse, (void*) threadArgs);
+    pthread_create(&threadTDTAndTOTTableParseThread, NULL, threadTDTAndTOTTableParse, threadTOTAndTDTArgs);
 
     return NO_ERROR;
 }
