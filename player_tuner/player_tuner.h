@@ -41,6 +41,7 @@
 
 #define FREQUENCY_MGH 1000000
 #define STREAM_NOT_FOUND 0
+#define NO_STREAM_TYPE 1
 
 typedef struct _player_handles {
     uint32_t playerHandle;
@@ -223,12 +224,23 @@ int32_t tunerDeinitialization();
 /****************************************************************************
 *
 * @brief
-* Function for getting the stream type from dvb standards
+* Function for getting the video stream type from dvb standards
 *
 * @return
-*   stream_audio, enum of the stream
+*   dvb_streams, enum of the stream
 *   STREAM_NOT_FOUND, if there is no error
 ****************************************************************************/
-int8_t getStreamType(uint8_t streamType);
+int8_t getVideoStreamType(uint8_t streamType);
+
+/****************************************************************************
+*
+* @brief
+* Function for getting the audio stream type from dvb standards
+*
+* @return
+*   dvb_streams, enum of the stream
+*   STREAM_NOT_FOUND, if there is no error
+****************************************************************************/
+int8_t getAudioStreamType(uint8_t streamType);
 
 #endif

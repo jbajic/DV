@@ -288,17 +288,50 @@ int32_t freeFilterCallback(int32_t (*filterCallback)(uint8_t*), player_handles* 
 int32_t createStream(player_handles* handles, config_parameters* config)
 {
     int32_t result;
-    // printf("Create: vpid %d vtype %d\n", config->service.vpid, config->service.vtype);
-    // printf("Create: apid %d atype %d\n", config->service.apid, config->service.atype);
-    result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, config->service.vpid, getStreamType(config->service.vtype), &handles->videoStreamHandle);
+
+    result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, config->service.vpid,
+        getVideoStreamType(config->service.vtype), &handles->videoStreamHandle);
     ASSERT_TDP_RESULT(result, "Player_Stream_Create");
 
-	result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, config->service.apid, getStreamType(config->service.atype), &handles->audioStreamHandle);
+	result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, config->service.apid, 
+        getAudioStreamType(config->service.atype), &handles->audioStreamHandle);
     ASSERT_TDP_RESULT(result, "Player_Stream_Create");
 
     return NO_ERROR;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for starting stream
+*
+* @param
+*       handles - [in] Structure containing all handles
+*       streamHandle - [in] Specified which handle to change
+*       currentPmt - [in] PMT table of the channel
+*       getStreamType() - [in] Function containing all stream types of specified kind
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+static int32_t startStream(player_handles* handles, uint32_t* streamHandle, pmt_table* currentPmt, int8_t (*getStreamType)(uint8_t))
+{
+    int32_t i, result;
+    for (i = 0; i < currentPmt->numberOfStreams; ++i)
+    {
+        if (getStreamType(currentPmt->streams[i].stream_type) != 0)
+        {
+            result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
+                currentPmt->streams[i].elementary_PID, getStreamType(currentPmt->streams[i].stream_type), streamHandle);
+            ASSERT_TDP_RESULT(result, "Player_Stream_Video_Change");
+
+            return NO_ERROR;
+        }
+    }
+    *(streamHandle) = 0;
+    return NO_STREAM_TYPE;
+}
 
 /****************************************************************************
 *
@@ -307,7 +340,7 @@ int32_t createStream(player_handles* handles, config_parameters* config)
 *
 * @param
 *       handles - [in] structure containing all handles
-*       channelNumber - [in] Channel number of which the stream is played
+*       channelNumber - [in] Channel number of which the streams are played
 *
 * @return
 *   ERROR, if there is error
@@ -315,30 +348,32 @@ int32_t createStream(player_handles* handles, config_parameters* config)
 ****************************************************************************/
 int32_t changeStream(player_handles* handles, int32_t channelNumber)
 {
-    int32_t result;
     removeStream(handles);
     pmt_table* currentPmt = getPMTTable(channelNumber - 1);
-    if (getStreamType(currentPmt->streams[0].stream_type))
-    {
-        result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
-            currentPmt->streams[0].elementary_PID, getStreamType(currentPmt->streams[0].stream_type), &handles->videoStreamHandle);
-        ASSERT_TDP_RESULT(result, "Player_Stream_Video_Change");
-    }
-    else
-    {
-        handles->videoStreamHandle = 0;
-    }
+    startStream(handles, &handles->videoStreamHandle, currentPmt, getVideoStreamType);
+    startStream(handles, &handles->audioStreamHandle, currentPmt, getAudioStreamType);
+    // if (getVideoStreamType(currentPmt->streams[0].stream_type))
+    // {
 
-    if (getStreamType(currentPmt->streams[2].stream_type))
-    {
-        result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
-            currentPmt->streams[2].elementary_PID, getStreamType(currentPmt->streams[2].stream_type), &handles->audioStreamHandle);
-        ASSERT_TDP_RESULT(result, "Player_Stream_Audio_Change");
-    }
-    else
-    {
-        handles->audioStreamHandle = 0;
-    }
+    //     result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
+    //         currentPmt->streams[0].elementary_PID, getStreamType(currentPmt->streams[0].stream_type), &handles->videoStreamHandle);
+    //     ASSERT_TDP_RESULT(result, "Player_Stream_Video_Change");
+    // }
+    // else
+    // {
+    //     handles->videoStreamHandle = 0;
+    // }
+
+    // if (getAudioStreamType(currentPmt->streams[2].stream_type))
+    // {
+    //     result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
+    //         currentPmt->streams[2].elementary_PID, getStreamType(currentPmt->streams[2].stream_type), &handles->audioStreamHandle);
+    //     ASSERT_TDP_RESULT(result, "Player_Stream_Audio_Change");
+    // }
+    // else
+    // {
+    //     handles->audioStreamHandle = 0;
+    // }
 
     return NO_ERROR;
 }
@@ -423,18 +458,38 @@ int32_t tunerDeinitialization()
 /****************************************************************************
 *
 * @brief
-* Function for getting the stream type from dvb standards
+* Function for getting the video stream type from dvb standards
 *
 * @return
-*   stream_audio, enum of the stream
+*   dvb_streams, enum of the stream
 *   STREAM_NOT_FOUND, if there is no error
 ****************************************************************************/
-int8_t getStreamType(uint8_t streamType)
+int8_t getVideoStreamType(uint8_t streamType)
 {
 	switch(streamType)
 	{
 		case stream_video_h262:
 			return VIDEO_TYPE_MPEG2;
+		// case stream_private_sections:
+		// 	return VIDEO_TYPE_MPEG2;
+		default:
+			return STREAM_NOT_FOUND;
+	}
+}
+
+/****************************************************************************
+*
+* @brief
+* Function for getting the audio stream type from dvb standards
+*
+* @return
+*   dvb_streams, enum of the stream
+*   STREAM_NOT_FOUND, if there is no error
+****************************************************************************/
+int8_t getAudioStreamType(uint8_t streamType)
+{
+	switch(streamType)
+	{
 		case stream_audio:
 			return AUDIO_TYPE_MPEG_AUDIO;
 		// case stream_private_sections:
