@@ -75,18 +75,108 @@ typedef struct _graphics
     DFBSurfaceDescription surfaceDesc;
 } graphics;
 
-int32_t initGraphics(graphics*);
+/****************************************************************************
+*
+* @brief
+* Function for initializin graphics structure
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t initGraphics(graphics* graphicsStruct);
 
-int32_t drawChannelInfo(graphics*, int32_t, int8_t);
+/****************************************************************************
+*
+* @brief
+* Function for drawing channel information
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*       channelNumber - [in] Number of channel
+*       isThereTeletext - [in] Integer indicating if the programm has teletext
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t drawChannelInfo(graphics* graphicsStruct, int32_t channelNumber, int8_t isThereTeletext);
 
-int32_t drawSoundInfo(graphics*, uint32_t);
+/****************************************************************************
+*
+* @brief
+* Function for drawing sound information
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*       volume - [in] Volume
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t drawSoundInfo(graphics* graphicsStruct, uint32_t volume);
 
-int32_t drawReminder(graphics*, int32_t, uint8_t);
+/****************************************************************************
+*
+* @brief
+* Function for drawing remidner dialog
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*       channelNumber - [in] Number of channel to switch
+*       chosenButton - [in] Chosen button (left or right)
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t drawReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t chosenButton);
 
-int32_t drawTime(graphics*, time_utc);
+/****************************************************************************
+*
+* @brief
+* Function for chanign color when drawing clock
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*       timeUtc - [in] Time to show on digital clock
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t drawTime(graphics* graphicsStruct, time_utc timeUtc);
 
-int32_t deinitGraphics(graphics*);
+/****************************************************************************
+*
+* @brief
+* Function for clearing screen
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t clearGraphics(graphics* graphicsStruct);
 
-int32_t clearGraphics(graphics*);
+/****************************************************************************
+*
+* @brief
+* Function for releasing graphics structure
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t deinitGraphics(graphics* graphicsStruct);
 
 #endif

@@ -89,8 +89,36 @@ typedef struct _config_parameters
 
 int32_t loadFile(char** file_path, config_parameters*);
 
-int32_t analyzeWord(char*, FILE**, config_parameters*);
+/****************************************************************************
+*
+* @brief
+* Function analyzes word and parses it into appropriate value
+*
+* @param
+*       word - [in] Field of characters representig possible key word
+*       filePointer - [in] Pointer to the opened file
+*       config - [in] Pointer to the config structure to which the parsed data will be written
+*
+* @return
+*   NO_ERROR, in case of no error
+*   ERROR, in case of error
+*
+****************************************************************************/
+int32_t analyzeWord(char* word, FILE** filePointer, config_parameters* config);
 
-void testConfigPrintf(config_parameters*);
+/****************************************************************************
+*
+* @brief
+* Function is used only for testing purposes, to show config file
+*
+* @param
+*       config - [in] Pointer to the config structure to which the parsed data is written
+*
+* @return
+*   NO_ERROR, in case of no error
+*   ERROR, in case of error
+*
+****************************************************************************/
+void testConfigPrintf(config_parameters* config);
 
 #endif

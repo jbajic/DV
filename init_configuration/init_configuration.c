@@ -171,7 +171,7 @@ static int32_t isNonValueKeyWord(char* word)
 * Function takes in file path from which it parses neccesary data for config file
 *
 * @param
-*       file_path - [in] Field of characters representig file path to config
+*       filePath - [in] Field of characters representig file path to config
 *       config - [in] Pointer to structure of config parameters
 *
 * @return
@@ -179,7 +179,7 @@ static int32_t isNonValueKeyWord(char* word)
 *   ERROR, in case of error
 *
 ****************************************************************************/
-int32_t loadFile(char** file_path, config_parameters* config)
+int32_t loadFile(char** filePath, config_parameters* config)
 {
     FILE* filePointer;
     int character;
@@ -188,7 +188,7 @@ int32_t loadFile(char** file_path, config_parameters* config)
     int isEnclosing = FALSE;
     config->headReminder = NULL;
     
-    filePointer = fopen(*file_path, "r");
+    filePointer = fopen(*filePath, "r");
     if (filePointer == NULL)
     {
         return ERROR;
