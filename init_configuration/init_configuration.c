@@ -239,6 +239,15 @@ int32_t loadFile(char** filePath, config_parameters* config)
     return NO_ERROR;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function is used only for testing purposes, to show config file
+*
+* @param
+*       config - [in] Pointer to the config structure to which the parsed data is written
+*
+****************************************************************************/
 void testConfigPrintf(config_parameters* config)
 {
     printf("Frequency %d\n", config->frequency);

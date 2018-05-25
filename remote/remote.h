@@ -86,12 +86,46 @@ typedef struct _timer_channel_changer_args
     timer_struct* removeChannelInfoTimer;
 } timer_channel_changer_args;
 
-int32_t startRemote(player_handles*, graphics*, reminder*);
+/****************************************************************************
+*
+* @brief
+* Function for initiating remote
+*
+* @param
+*   handles - [in] Player handles needed when initiating programm
+*   graphicsStruct - [in] Graphics struct for drawing informations
+*   reminderHead - [in] Head of reminder list
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t startRemote(player_handles* handles, graphics* graphicsStruct, reminder* reminderHead);
 
-int32_t initRemote(struct input_event**, int32_t*);
+/****************************************************************************
+*
+* @brief
+* Function for checking for new TDT data
+*
+* @param
+*   args - [in] Structure containtg thread related information
+*
+* @return
+*   NO_ERROR, if there is no error
+****************************************************************************/
+void* checkForTDTData(void* args);
 
-void* checkForTDTData(void*);
-
-void *initRemoteLoop(void*);
+/****************************************************************************
+*
+* @brief
+* Function for initiating remote loop which handles remote related events
+*
+* @param
+*   args - [in] remoteArgs containing all neede variables, for graphics, changing programs and for reminders
+*
+* @return
+*   NO_ERROR, if there is no error
+****************************************************************************/
+void* initRemoteLoop(void* args);
 
 #endif

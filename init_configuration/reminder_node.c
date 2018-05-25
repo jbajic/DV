@@ -19,6 +19,17 @@
 *****************************************************************************/
 #include "reminder_node.h"
 
+/****************************************************************************
+*
+* @brief
+* Function for adding reminder in reminder linked list
+*
+* @param
+*       hours - [in] Hours of new reminder
+*       minutes - [in] Minutes of new reminder
+*       reminderHead - [in] Head of reminder list
+*
+****************************************************************************/
 void addReminderTime(int32_t hours, int32_t minutes, reminder** reminderHead)
 {
     if (*(reminderHead) == NULL)
@@ -42,6 +53,16 @@ void addReminderTime(int32_t hours, int32_t minutes, reminder** reminderHead)
     }
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for adding channel index in newly created reminder (last)
+*
+* @param
+*       index - [in] Index of channel to put in reminder
+*       reminderHead - [in] Head of reminder list
+*
+****************************************************************************/
 void addReminderChannelIndex(int32_t index, reminder** reminderHead)
 {
     reminder* newReminder = *(reminderHead);
@@ -52,6 +73,19 @@ void addReminderChannelIndex(int32_t index, reminder** reminderHead)
     newReminder->channel_index = index;
 }
 
+/****************************************************************************
+*
+* @brief
+* Function for checking is there reminder for current time
+*
+* @param
+*       utcTime - [in] UTC time of current time
+*       reminderHead - [in] Head of reminder list
+*
+* @return
+*       reminder* - pointer to found reminder or NULL of non exist
+*
+****************************************************************************/
 reminder* isThereTime(reminder* reminderHead, time_utc utcTime)
 {
     reminder* newReminder = reminderHead;

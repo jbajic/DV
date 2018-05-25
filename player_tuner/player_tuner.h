@@ -71,32 +71,159 @@ enum table_pid
     tdt_and_tot_table_pid = 0x0014,
 };
 
-int32_t tunerInitialization(config_parameters*);
+/****************************************************************************
+*
+* @brief
+* Function for tuner initialization
+*
+* @param
+*       config - [in] Config in which the initialization parameters are contained
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t tunerInitialization(config_parameters* config);
 
-int32_t startPlayer(player_handles*);
+/****************************************************************************
+*
+* @brief
+* Function for player initialization and start
+*
+* @param
+*       handles - [in] Player handles in which to initialize player and open source
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t startPlayer(player_handles* handles);
 
-int32_t createStream(player_handles*, config_parameters*);
+/****************************************************************************
+*
+* @brief
+* Function for creating stream
+*
+* @param
+*       handles - [in] structure containing all handles
+*       config - [in] Config which contains which programm to start
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t createStream(player_handles* handles, config_parameters* config);
 
-int32_t changeStream(player_handles*, int32_t);
+/****************************************************************************
+*
+* @brief
+* Function for changing stream
+*
+* @param
+*       handles - [in] structure containing all handles
+*       channelNumber - [in] Channel number of which the stream is played
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t changeStream(player_handles* handles, int32_t channelNumber);
 
-int32_t setupData(pthread_t*, player_handles_mutex*);
+/****************************************************************************
+*
+* @brief
+* Function for starting the parsing of tables
+*
+* @param
+*        ????
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t setupData(pthread_t* backgroundProcess, player_handles_mutex* threadArgs);
 
-int32_t setFilterToTable(int32_t (*filterCallback)(uint8_t*), int8_t (*isTableParsed)(), player_handles*, int32_t, int32_t);
+/****************************************************************************
+*
+* @brief
+* Function for starting the demux filtering
+*
+* @param
+*       filterCallback() - [in] Which filterCallback to playe in demux
+*       isTableParsed() - [in] Callback of the table to tell if that table is parsed
+*       handles - [in] structure containing all handles
+*       tablePID - [in] PID of table to parse
+*       tableId - [in] ID of table to parse
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t setFilterToTable(int32_t (*filterCallback)(uint8_t*), int8_t (*isTableParsed)(), player_handles* handles, int32_t tablePID, int32_t tableId);
 
-int32_t freeFilterCallback(int32_t (*filterCallback)(uint8_t*), player_handles*);
+/****************************************************************************
+*
+* @brief
+* Function for freeing filter
+*
+* @param
+*       filterCallback() - [in] Which filterCallback to playe in demux
+*       handles - [in] structure containing all handles
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t freeFilterCallback(int32_t (*filterCallback)(uint8_t*), player_handles* handles);
 
-int32_t removeStream(player_handles*);
+/****************************************************************************
+*
+* @brief
+* Function for removing stream
+*
+* @param
+*       handles - [in] structure containing all handles
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t removeStream(player_handles* handles);
 
-int32_t stopPlayer(player_handles*);
+/****************************************************************************
+*
+* @brief
+* Function for stopping player
+*
+* @param
+*       handles - [in] structure containing all handles
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t stopPlayer(player_handles* handles);
 
+/****************************************************************************
+*
+* @brief
+* Function for tuner deinitialization
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
 int32_t tunerDeinitialization();
 
-int32_t myPrivateTunerStatusCallback(t_LockStatus);
-
-void* threadTDTAndTOTTableParse();
-
-// void* checkForTDTData(void* args);
-
-int8_t getStreamType(uint8_t);
+/****************************************************************************
+*
+* @brief
+* Function for getting the stream type from dvb standards
+*
+* @return
+*   stream_audio, enum of the stream
+*   STREAM_NOT_FOUND, if there is no error
+****************************************************************************/
+int8_t getStreamType(uint8_t streamType);
 
 #endif

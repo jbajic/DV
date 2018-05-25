@@ -110,7 +110,6 @@ static void clearScreen(void* args)
     clearGraphics((graphics*) args);
 }
 
-
 /****************************************************************************
 *
 * @brief

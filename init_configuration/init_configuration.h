@@ -114,10 +114,6 @@ int32_t analyzeWord(char* word, FILE** filePointer, config_parameters* config);
 * @param
 *       config - [in] Pointer to the config structure to which the parsed data is written
 *
-* @return
-*   NO_ERROR, in case of no error
-*   ERROR, in case of error
-*
 ****************************************************************************/
 void testConfigPrintf(config_parameters* config);
 

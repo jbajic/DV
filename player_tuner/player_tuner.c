@@ -19,6 +19,80 @@
 *****************************************************************************/
 #include "player_tuner.h"
 
+static pthread_cond_t statusCondition = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t statusMutex = PTHREAD_MUTEX_INITIALIZER;
+
+/****************************************************************************
+*
+* @brief
+* Function for waiting for the tuner init to finish
+*
+* @param
+*   status - [in] 
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+static int32_t myPrivateTunerStatusCallback(t_LockStatus status)
+{
+    if(status == STATUS_LOCKED)
+    {
+        pthread_mutex_lock(&statusMutex);
+        pthread_cond_signal(&statusCondition);
+        pthread_mutex_unlock(&statusMutex);
+        printf("\n\n\tCALLBACK LOCKED\n\n");
+    }
+    else
+    {
+        printf("\n\n\tCALLBACK NOT LOCKED\n\n");
+    }
+    return NO_ERROR;
+}
+
+/****************************************************************************
+*
+* @brief
+* Function for executed in thread which parses TOT and TDT tables
+*
+* @param
+*       handles - [in] args
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+static void* threadTDTAndTOTTableParse(void* args)
+{
+    // pthread_t tdtThread;
+    player_handles_mutex* threadArgs = (player_handles_mutex*) args;
+    setFilterToTable(filterTOTParserCallback, isTOTTableParsed, (player_handles*) threadArgs->handles, tdt_and_tot_table_pid, tot_table_id);
+    freeFilterCallback(filterTOTParserCallback, (player_handles*) threadArgs->handles);
+
+    setFilterToTable(filterTDTParserCallback, isTDTTableParsed, (player_handles*) threadArgs->handles, tdt_and_tot_table_pid, tdt_table_id);
+    // pthread_create(&tdtThread, NULL, checkForTDTData, (void*) threadArgs->channelReminders);
+
+    pthread_mutex_lock(&threadArgs->backgroundProcessesMutex);
+    printf("threadTDTAndTOTTableParse unlock\n");
+    // pthread_cancel(tdtThread);
+    freeFilterCallback(filterTDTParserCallback, (player_handles*) threadArgs->handles);
+    printf("threadTDTAndTOTTableParse finish unlock\n");
+    pthread_mutex_unlock(&threadArgs->backgroundProcessesMutex);
+    
+    return NO_ERROR;
+}
+
+/****************************************************************************
+*
+* @brief
+* Function for changing coloc in console if there is error
+*
+* @param
+*       attr - [in] attributes
+*       fg - [in] foreground
+*       bg - [in] background
+*
+****************************************************************************/
 static inline void textColor(int32_t attr, int32_t fg, int32_t bg)
 {
    char command[13];
@@ -27,9 +101,6 @@ static inline void textColor(int32_t attr, int32_t fg, int32_t bg)
    sprintf(command, "%c[%d;%d;%dm", 0x1B, attr, fg + 30, bg + 40);
    printf("%s", command);
 }
-
-static pthread_cond_t statusCondition = PTHREAD_COND_INITIALIZER;
-static pthread_mutex_t statusMutex = PTHREAD_MUTEX_INITIALIZER;
 
 /****************************************************************************
 *
@@ -135,71 +206,6 @@ int32_t setupData(pthread_t* backgroundProcess, player_handles_mutex* threadArgs
 
     return NO_ERROR;
 }
-
-
-/****************************************************************************
-*
-* @brief
-* Function for executed in thread which parses TOT and TDT tables
-*
-* @param
-*       handles - [in] args
-*
-* @return
-*   ERROR, if there is error
-*   NO_ERROR, if there is no error
-****************************************************************************/
-void* threadTDTAndTOTTableParse(void* args)
-{
-    // pthread_t tdtThread;
-    player_handles_mutex* threadArgs = (player_handles_mutex*) args;
-    setFilterToTable(filterTOTParserCallback, isTOTTableParsed, (player_handles*) threadArgs->handles, tdt_and_tot_table_pid, tot_table_id);
-    freeFilterCallback(filterTOTParserCallback, (player_handles*) threadArgs->handles);
-
-    setFilterToTable(filterTDTParserCallback, isTDTTableParsed, (player_handles*) threadArgs->handles, tdt_and_tot_table_pid, tdt_table_id);
-    // pthread_create(&tdtThread, NULL, checkForTDTData, (void*) threadArgs->channelReminders);
-
-    pthread_mutex_lock(&threadArgs->backgroundProcessesMutex);
-    printf("threadTDTAndTOTTableParse unlock\n");
-    // pthread_cancel(tdtThread);
-    freeFilterCallback(filterTDTParserCallback, (player_handles*) threadArgs->handles);
-    printf("threadTDTAndTOTTableParse finish unlock\n");
-    pthread_mutex_unlock(&threadArgs->backgroundProcessesMutex);
-    
-    return NO_ERROR;
-}
-
-// void* checkForTDTData(void* args)
-// {
-//     uint8_t isReminderTimeDetecterd = FALSE;
-//     uint8_t isItTimeForReminder = FALSE;
-//     tdt_table* tdtTable = getTDTTable();
-//     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-//     while (TRUE)
-//     {
-//         if (isTDTTableParsed())
-//         {
-//             printf("Time Arrived\n");
-//             isItTimeForReminder = isThereTime((reminder*) args, tdtTable->dateTimeUTC.time);
-//             if (isItTimeForReminder)
-//             {
-//                 isReminderTimeDetecterd = TRUE;
-//             }
-//             else
-//             {
-//                 isReminderTimeDetecterd = FALSE;
-//             }
-//             if (!isReminderTimeDetecterd && isItTimeForReminder)
-//             {
-//                 // showReminder();
-//             }
-//             setTDTTableNotParsed();
-//         }
-//     }
-
-//     return NO_ERROR;
-// }
-
 
 /****************************************************************************
 *
@@ -404,34 +410,6 @@ int32_t tunerDeinitialization()
     result = Tuner_Deinit();
     ASSERT_TDP_RESULT(result, "Tuner_Deinit");
 
-    return NO_ERROR;
-}
-
-/****************************************************************************
-*
-* @brief
-* Function for waiting for the tuner init to finish
-*
-* @param
-*   status - [in] 
-*
-* @return
-*   ERROR, if there is error
-*   NO_ERROR, if there is no error
-****************************************************************************/
-int32_t myPrivateTunerStatusCallback(t_LockStatus status)
-{
-    if(status == STATUS_LOCKED)
-    {
-        pthread_mutex_lock(&statusMutex);
-        pthread_cond_signal(&statusCondition);
-        pthread_mutex_unlock(&statusMutex);
-        printf("\n\n\tCALLBACK LOCKED\n\n");
-    }
-    else
-    {
-        printf("\n\n\tCALLBACK NOT LOCKED\n\n");
-    }
     return NO_ERROR;
 }
 
