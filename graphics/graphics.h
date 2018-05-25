@@ -32,9 +32,9 @@
 #define SOUND_BIG_LINE_WIDTH 70
 
 /**
- * Reminder dimensions 
+ * Reminder dimensions  and strings
 **/
-#define CONFIRM_BUTTON "OK"
+#define CONFIRM_BUTTON "YES"
 #define DECLINE_BUTTON "NO"
 
 /**

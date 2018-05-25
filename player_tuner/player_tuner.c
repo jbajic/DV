@@ -184,8 +184,8 @@ int32_t startPlayer(player_handles* handles)
 * Function for starting the parsing of tables
 *
 * @param
-*        ????
-*
+*       handles - [in] Player handles in which to initialize player and open source
+*       threadArguments - [in] mutex and condition for starting and finishing thread in which callback for tdt and tot is set as filter
 * @return
 *   ERROR, if there is error
 *   NO_ERROR, if there is no error
