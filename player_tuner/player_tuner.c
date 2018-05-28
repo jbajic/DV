@@ -203,7 +203,6 @@ int32_t setupData(player_handles* handles, thread_args* threadArguments)
     {
         setFilterToTable(filterPMTParserCallback, handles, patTable->pat_programm[i + 1].programm_map_pid, pmt_table_id);
         freeFilterCallback(filterPMTParserCallback, handles);
-        // setPmtTableParsedFalse();
     }
     pthread_create(&threadTDTAndTOTTableParseThread, NULL, threadTDTAndTOTTableParse, threadTOTAndTDTArgs);
 

@@ -33,18 +33,6 @@ typedef struct _tdt_table {
 /****************************************************************************
 *
 * @brief
-* Function for calculating date from MJD
-*
-* @param
-*       dateStruct - [in] Date struct in which calculated date will be written to
-*       mjd - [in] Modified Julian Date
-*
-****************************************************************************/
-void setDateFromMJD(date_tdt*, uint16_t);
-
-/****************************************************************************
-*
-* @brief
 * Function for parsing TDT table
 *
 * @param
