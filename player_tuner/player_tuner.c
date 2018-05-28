@@ -67,18 +67,14 @@ static void* threadTDTAndTOTTableParse(void* args)
     printf("threadTDTAndTOTTableParse1\n");
     player_handles_thread_args* threadTOTAndTDTArgs = (player_handles_thread_args*) args;
     printf("threadTDTAndTOTTableParse3\n");
-    setFilterToTable(filterTOTParserCallback, isTOTTableParsed, threadTOTAndTDTArgs->handles, tdt_and_tot_table_pid, tot_table_id);
+    setFilterToTable(filterTOTParserCallback, threadTOTAndTDTArgs->handles, tdt_and_tot_table_pid, tot_table_id);
     printf("threadTDTAndTOTTableParse2\n");
     freeFilterCallback(filterTOTParserCallback, threadTOTAndTDTArgs->handles);
 
-    setFilterToTable(filterTDTParserCallback, isTDTTableParsed, threadTOTAndTDTArgs->handles, tdt_and_tot_table_pid, tdt_table_id);
-    // pthread_create(&tdtThread, NULL, checkForTDTData, (void*) threadArgs->channelReminders);
-    printf("started tdt\n");
+    setFilterToTable(filterTDTParserCallback, threadTOTAndTDTArgs->handles, tdt_and_tot_table_pid, tdt_table_id);
     pthread_mutex_lock(&threadTOTAndTDTArgs->threadArguments->mutex);
-    printf("threadTDTAndTOTTableParse unlock\n");
     pthread_cond_wait( &threadTOTAndTDTArgs->threadArguments->condition, &threadTOTAndTDTArgs->threadArguments->mutex ); 
     freeFilterCallback(filterTDTParserCallback, threadTOTAndTDTArgs->handles);
-    printf("threadTDTAndTOTTableParse finish unlock\n");
     pthread_mutex_unlock(&threadTOTAndTDTArgs->threadArguments->mutex);
     free(threadTOTAndTDTArgs);
     return NO_ERROR;
@@ -198,16 +194,16 @@ int32_t setupData(player_handles* handles, thread_args* threadArguments)
     threadTOTAndTDTArgs->handles = handles;
     threadTOTAndTDTArgs->threadArguments = threadArguments;
 
-    setFilterToTable(filterPATParserCallback, isPatTableParsed, handles, pat_table_pid, pat_table_id);
+    setFilterToTable(filterPATParserCallback, handles, pat_table_pid, pat_table_id);
     freeFilterCallback(filterPATParserCallback, handles);
 
     pat_table* patTable = getPATTable();
     allocatePMTTables(patTable->number_of_programs);
     for (i = 0; i < patTable->number_of_programs - 1; i++)
     {
-        setFilterToTable(filterPMTParserCallback, isPmtTableParsed, handles, patTable->pat_programm[i + 1].programm_map_pid, pmt_table_id);
+        setFilterToTable(filterPMTParserCallback, handles, patTable->pat_programm[i + 1].programm_map_pid, pmt_table_id);
         freeFilterCallback(filterPMTParserCallback, handles);
-        setPmtTableParsedFalse();
+        // setPmtTableParsedFalse();
     }
     pthread_create(&threadTDTAndTOTTableParseThread, NULL, threadTDTAndTOTTableParse, threadTOTAndTDTArgs);
 
@@ -230,7 +226,7 @@ int32_t setupData(player_handles* handles, thread_args* threadArguments)
 *   ERROR, if there is error
 *   NO_ERROR, if there is no error
 ****************************************************************************/
-int32_t setFilterToTable(int32_t (*filterCallback)(uint8_t*), int8_t (*isTableParsed)(), player_handles* handles, int32_t tablePID, int32_t tableId)
+int32_t setFilterToTable(int32_t (*filterCallback)(uint8_t*), player_handles* handles, int32_t tablePID, int32_t tableId)
 {
     int32_t result;
     /* Set filter to demux */
@@ -241,9 +237,8 @@ int32_t setFilterToTable(int32_t (*filterCallback)(uint8_t*), int8_t (*isTablePa
     result = Demux_Register_Section_Filter_Callback(filterCallback);
     ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
 
-    while (!isTableParsed())
-    {
-    }
+    waitForTableToParse();
+
     return NO_ERROR;
 }
 
@@ -352,28 +347,6 @@ int32_t changeStream(player_handles* handles, int32_t channelNumber)
     pmt_table* currentPmt = getPMTTable(channelNumber - 1);
     startStream(handles, &handles->videoStreamHandle, currentPmt, getVideoStreamType);
     startStream(handles, &handles->audioStreamHandle, currentPmt, getAudioStreamType);
-    // if (getVideoStreamType(currentPmt->streams[0].stream_type))
-    // {
-
-    //     result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
-    //         currentPmt->streams[0].elementary_PID, getStreamType(currentPmt->streams[0].stream_type), &handles->videoStreamHandle);
-    //     ASSERT_TDP_RESULT(result, "Player_Stream_Video_Change");
-    // }
-    // else
-    // {
-    //     handles->videoStreamHandle = 0;
-    // }
-
-    // if (getAudioStreamType(currentPmt->streams[2].stream_type))
-    // {
-    //     result = Player_Stream_Create(handles->playerHandle, handles->sourceHandle, 
-    //         currentPmt->streams[2].elementary_PID, getStreamType(currentPmt->streams[2].stream_type), &handles->audioStreamHandle);
-    //     ASSERT_TDP_RESULT(result, "Player_Stream_Audio_Change");
-    // }
-    // else
-    // {
-    //     handles->audioStreamHandle = 0;
-    // }
 
     return NO_ERROR;
 }

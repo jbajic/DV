@@ -20,7 +20,6 @@
 #include "parser_tdt.h"
 
 tdt_table tdtTable;
-int8_t isTDTParsed = FALSE;
 
 /****************************************************************************
 *
@@ -78,34 +77,10 @@ int32_t filterTDTParserCallback(uint8_t* buffer)
     // printf("HOURS : %u\n", tdtTable.dateTimeUTC.time.hours);
     // printf("MINUTES: %u\n", tdtTable.dateTimeUTC.time.minutes);
     // printf("SECONDS : %u\n", tdtTable.dateTimeUTC.time.seconds);
-    isTDTParsed = TRUE;
+    pthread_mutex_lock(&tableParserMutex);
+	pthread_cond_signal(&tableParserCondition);
+	pthread_mutex_unlock(&tableParserMutex);
     return NO_ERROR;
-}
-
-/****************************************************************************
-*
-* @brief
-* Function informing other if TDT is parsed or not
-*
-* @return
-*   TRUE, if TDT is parsed
-*   FALSE, if TDT is not parsed
-*
-****************************************************************************/
-int8_t isTDTTableParsed()
-{
-    return isTDTParsed;
-}
-
-/****************************************************************************
-*
-* @brief
-* Function for setting variable isTDTParsed to FALSE
-*
-****************************************************************************/
-void setTDTTableNotParsed()
-{
-    isTDTParsed = FALSE;
 }
 
 /****************************************************************************

@@ -20,7 +20,7 @@
 #ifndef PARSER_PMT_H
 #define PARSER_PMT_H
 
-#include "./../base.h"
+#include "table.h"
 
 typedef struct _pmt_streams {
 	uint8_t stream_type;
@@ -46,12 +46,8 @@ typedef struct _pmt_table {
 
 int32_t filterPMTParserCallback(uint8_t*);
 
-int8_t isPmtTableParsed();
-
 pmt_table* getPMTTable(int32_t channelNumber);
 
 void allocatePMTTables(int32_t);
-
-void setPmtTableParsedFalse();
 
 #endif

@@ -20,7 +20,6 @@
 #include "parser_pat.h"
 
 static pat_table patTable;
-static int isPATParsed = FALSE;
 
 /****************************************************************************
 *
@@ -87,23 +86,10 @@ int32_t filterPATParserCallback(uint8_t* buffer)
 	// printf("last_section_number: %d\n", patTable.last_section_number);
 	// printf("broj bajtova u foru: %d\n", patTable.pat_header.section_length - 5 - 4);
 
-	isPATParsed = TRUE;
+	pthread_mutex_lock(&tableParserMutex);
+	pthread_cond_signal(&tableParserCondition);
+	pthread_mutex_unlock(&tableParserMutex);
     return NO_ERROR;
-}
-
-/****************************************************************************
-*
-* @brief
-* Function informing other if PAT is parsed or not
-*
-* @return
-*   TRUE, if PAT is parsed
-*   FALSE, if PAT is not parsed
-*
-****************************************************************************/
-int8_t isPatTableParsed()
-{
-	return isPATParsed;
 }
 
 /****************************************************************************

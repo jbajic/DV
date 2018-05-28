@@ -165,7 +165,7 @@ int32_t setupData(player_handles* handles, thread_args* threadArguments);
 *   ERROR, if there is error
 *   NO_ERROR, if there is no error
 ****************************************************************************/
-int32_t setFilterToTable(int32_t (*filterCallback)(uint8_t*), int8_t (*isTableParsed)(), player_handles* handles, int32_t tablePID, int32_t tableId);
+int32_t setFilterToTable(int32_t (*filterCallback)(uint8_t*), player_handles* handles, int32_t tablePID, int32_t tableId);
 
 /****************************************************************************
 *

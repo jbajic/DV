@@ -20,7 +20,6 @@
 #include "parser_tot.h"
 
 tot_table totTable;
-int8_t isTOTParsed = FALSE;
 
 /****************************************************************************
 *
@@ -150,23 +149,10 @@ int32_t filterTOTParserCallback(uint8_t* buffer)
     printf("HOURS : %u\n", totTable.dateTimeUTC.time.hours);
     printf("MINUTES: %u\n", totTable.dateTimeUTC.time.minutes);
     printf("SECONDS : %u\n", totTable.dateTimeUTC.time.seconds);
-    isTOTParsed = TRUE;
+    pthread_mutex_lock(&tableParserMutex);
+	pthread_cond_signal(&tableParserCondition);
+	pthread_mutex_unlock(&tableParserMutex);
     return NO_ERROR;
-}
-
-/****************************************************************************
-*
-* @brief
-* Function informing other if TOT is parsed or not
-*
-* @return
-*   TRUE, if TOT is parsed
-*   FALSE, if TOT is not parsed
-*
-****************************************************************************/
-int8_t isTOTTableParsed()
-{
-    return isTOTParsed;
 }
 
 /****************************************************************************

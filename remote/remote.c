@@ -244,29 +244,26 @@ void* checkForTDTData(void* args)
     printf("reminder TDT time %d:%d\n", backgroundProc->reminderHead->time.hours, backgroundProc->reminderHead->time.minutes);
     while (TRUE)
     {
-        if (isTDTTableParsed())
-        {
-            printf("checkForTDTData Arrived %d:%d:%d\n", tdtTable->dateTimeUTC.time.hours, tdtTable->dateTimeUTC.time.minutes, tdtTable->dateTimeUTC.time.seconds);
-            matchingReminder = isThereTime((reminder*) backgroundProc->reminderHead, tdtTable->dateTimeUTC.time);
+        waitForTableToParse();
+        printf("checkForTDTData Arrived %d:%d:%d\n", tdtTable->dateTimeUTC.time.hours, tdtTable->dateTimeUTC.time.minutes, tdtTable->dateTimeUTC.time.seconds);
+        matchingReminder = isThereTime((reminder*) backgroundProc->reminderHead, tdtTable->dateTimeUTC.time);
 
-            if (!isReminderTimeDetected && matchingReminder != NULL)
+        if (!isReminderTimeDetected && matchingReminder != NULL)
+        {
+            activeReminder = matchingReminder;
+            drawReminder(backgroundProc->graphicsStruct, matchingReminder->channel_index, 1);
+        }
+        if (matchingReminder != NULL)
+        {
+            isReminderTimeDetected = TRUE;
+        }
+        else
+        {
+            if (isReminderTimeDetected)
             {
-                activeReminder = matchingReminder;
-                drawReminder(backgroundProc->graphicsStruct, matchingReminder->channel_index, 1);
+                clearScreen(backgroundProc->graphicsStruct);
             }
-            if (matchingReminder != NULL)
-            {
-                isReminderTimeDetected = TRUE;
-            }
-            else
-            {
-                if (isReminderTimeDetected)
-                {
-                    clearScreen(backgroundProc->graphicsStruct);
-                }
-                isReminderTimeDetected = FALSE;
-            }
-            setTDTTableNotParsed();
+            isReminderTimeDetected = FALSE;
         }
     }
 
@@ -368,7 +365,6 @@ void* initRemoteLoop(void* args)
                         //volume up
                         if ((soundVolume + INT32_MAX * 0.1) <= INT32_MAX)
                         {
-                            printf("SOUND UP\n");
                             soundVolume += INT32_MAX * 0.1;
                             Player_Volume_Set(remoteArgs->handles->playerHandle, soundVolume);
                         }
@@ -383,7 +379,6 @@ void* initRemoteLoop(void* args)
                         //volume down
                         if (soundVolume != 0)
                         {
-                            printf("SOUND DOWN\n");
                             if ((soundVolume - INT32_MAX * 0.1) <= 0)
                             {
                                 soundVolume = 0;

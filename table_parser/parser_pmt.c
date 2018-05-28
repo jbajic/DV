@@ -20,7 +20,7 @@
 #include "parser_pmt.h"
 
 static pmt_table* pmtTables;
-static int isPMTTableParsed = FALSE;
+// static int isPMTTableParsed = FALSE;
 static int currentPMTTableIndex = 0;
 
 /****************************************************************************
@@ -40,7 +40,7 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
 {
     int i, maxNumberOfStreams, numberOfBytesStreams;
 	int offset = 0;
-	isPMTTableParsed = FALSE;
+	// isPMTTableParsed = FALSE;
 	pmt_table* currentPMT = &pmtTables[currentPMTTableIndex];
 	printf("PMT arrived\n");
 
@@ -107,34 +107,10 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
     }
 	currentPMT->numberOfStreams = i;
 	currentPMTTableIndex++;
-	isPMTTableParsed = TRUE;
+	pthread_mutex_lock(&tableParserMutex);
+	pthread_cond_signal(&tableParserCondition);
+	pthread_mutex_unlock(&tableParserMutex);
     return NO_ERROR;
-}
-
-/****************************************************************************
-*
-* @brief
-* Function informing other if PAT is parsed or not
-*
-* @return
-*   TRUE, if PAT is parsed
-*   FALSE, if PAT is not parsed
-*
-****************************************************************************/
-int8_t isPmtTableParsed()
-{
-	return isPMTTableParsed;
-}
-
-/****************************************************************************
-*
-* @brief
-* Function for setting variable isPMTTableParsed to FALSE
-*
-****************************************************************************/
-void setPmtTableParsedFalse()
-{
-	isPMTTableParsed = FALSE;
 }
 
 /****************************************************************************

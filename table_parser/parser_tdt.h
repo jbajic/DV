@@ -20,7 +20,7 @@
 #ifndef PARSER_TDT_H
 #define PARSER_TDT_H
 
-#include "./../base.h"
+#include "table.h"
 
 typedef struct _tdt_table {
     uint8_t tableId;
@@ -30,14 +30,45 @@ typedef struct _tdt_table {
     datetime dateTimeUTC;
 } tdt_table;
 
-int8_t isTDTTableParsed();
-
+/****************************************************************************
+*
+* @brief
+* Function for calculating date from MJD
+*
+* @param
+*       dateStruct - [in] Date struct in which calculated date will be written to
+*       mjd - [in] Modified Julian Date
+*
+****************************************************************************/
 void setDateFromMJD(date_tdt*, uint16_t);
 
-void setTDTTableNotParsed();
-
+/****************************************************************************
+*
+* @brief
+* Function for parsing TDT table
+*
+* @param
+*       buffer - [in] Pointer to the filtered incoming streamn which contains TDT table packets
+*
+* @return
+*   NO_ERROR, in case of no error
+*   ERROR, in case of error
+*
+****************************************************************************/
 int32_t filterTDTParserCallback(uint8_t*);
 
+/****************************************************************************
+*
+* @brief
+* Function for returnig pointer to the parsed TDT table
+*
+* @param
+*       channelNumber - [in] Number of channel to return
+*
+* @return
+*   tdt*
+*
+****************************************************************************/
 tdt_table* getTDTTable();
 
 #endif

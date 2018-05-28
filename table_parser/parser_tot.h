@@ -49,10 +49,30 @@ typedef struct _tot_table {
     local_time_offset* offsets;
 } tot_table;
 
-int8_t isTOTTableParsed();
-
+/****************************************************************************
+*
+* @brief
+* Function for parsing TOT table
+*
+* @return
+*   NO_ERROR, in case of no error
+*   ERROR, in case of error
+*
+****************************************************************************/
 int32_t filterTOTParserCallback(uint8_t*);
 
+/****************************************************************************
+*
+* @brief
+* Function for returnig pointer to the parsed TOT table
+*
+* @param
+*       channelNumber - [in] Number of channel to return
+*
+* @return
+*   tot_table*
+*
+****************************************************************************/
 tot_table* getTOTTable();
 
 #endif
