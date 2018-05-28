@@ -56,13 +56,10 @@ int32_t initGraphics(graphics* graphicsStruct)
     graphicsStruct->screenHeight = 0;
 
 	DFBCHECK(DirectFBInit(NULL, NULL));
-	printf("xaxax1\n");
     /* fetch the DirectFB interface */
 	DFBCHECK(DirectFBCreate(&graphicsStruct->dfbInterface));
-	printf("xaxax2\n");
     /* tell the DirectFB to take the full screen for this application */
 	DFBCHECK(graphicsStruct->dfbInterface->SetCooperativeLevel(graphicsStruct->dfbInterface, DFSCL_FULLSCREEN));
-	printf("xaxax3\n");
 	
     /* create primary surface with double buffering enabled */
 	graphicsStruct->surfaceDesc.flags = DSDESC_CAPS;
@@ -71,7 +68,6 @@ int32_t initGraphics(graphics* graphicsStruct)
 
     /* fetch the screen size */
     DFBCHECK (graphicsStruct->primary->GetSize(graphicsStruct->primary, &graphicsStruct->screenWidth, &graphicsStruct->screenHeight));
-    printf("xaxax4\n");
 	pthread_mutex_unlock(&graphicsMutex);
     return NO_ERROR;
 }
@@ -93,41 +89,43 @@ int32_t initGraphics(graphics* graphicsStruct)
 int32_t drawChannelInfo(graphics* graphicsStruct, int32_t channelNumber, int8_t isThereTeletext)
 {
 	pthread_mutex_lock(&graphicsMutex);
-	IDirectFBImageProvider *provider;
-	IDirectFBSurface *logoSurface = NULL;
-	int32_t logoHeight, logoWidth;
+	int32_t i;
 	char tekst[10];
 	sprintf(tekst, "Channel %d", channelNumber);
+	float circleRadius, circleWidthDifference, circleOffsetX, circleOffsetY;
+	circleRadius = 200;
+	circleWidthDifference = 40;
+	circleOffsetX = 300;
+	circleOffsetY = 250;
 
 	//clear surface
 	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x00));
 	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 0, 0, graphicsStruct->screenWidth, graphicsStruct->screenHeight));
 
-	DFBCHECK(graphicsStruct->dfbInterface->CreateImageProvider(graphicsStruct->dfbInterface, "blackCircle.png", &provider));
-	DFBCHECK(provider->GetSurfaceDescription(provider, &graphicsStruct->surfaceDesc));
-	DFBCHECK(graphicsStruct->dfbInterface->CreateSurface(graphicsStruct->dfbInterface, &graphicsStruct->surfaceDesc, &logoSurface));
-	DFBCHECK(provider->RenderTo(provider, logoSurface, NULL));
-	provider->Release(provider);
-    /* fetch the logo size and add (blit) it to the screen */
-	DFBCHECK(logoSurface->GetSize(logoSurface, &logoWidth, &logoHeight));
-	DFBCHECK(graphicsStruct->primary->Blit(graphicsStruct->primary, logoSurface, NULL, 0, 0));
-    
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0xAA));
+	for (i = 0; i <= 360; i++)
+	{
+		DFBCHECK(graphicsStruct->primary->FillTriangle(graphicsStruct->primary, circleRadius, circleRadius,
+		(circleRadius + circleWidthDifference) * cos(degreesToRadians(i)) + circleOffsetX, circleRadius * sin(degreesToRadians(i)) + circleOffsetY,
+		(circleRadius + circleWidthDifference) * cos(degreesToRadians(i + 1)) + circleOffsetX, circleRadius * sin(degreesToRadians(i + 1)) + circleOffsetY));
+	}
 
 	IDirectFBFont *fontInterface = NULL;
 	DFBFontDescription fontDesc;
 	
 	fontDesc.flags = DFDESC_HEIGHT;
-	fontDesc.height = 48;
+	fontDesc.height = 60;
+	fontDesc.width = 150;
 	
 	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0xFF, 0xff));
 	DFBCHECK(graphicsStruct->dfbInterface->CreateFont(graphicsStruct->dfbInterface, "/home/galois/fonts/DejaVuSans.ttf", &fontDesc, &fontInterface));
 	DFBCHECK(graphicsStruct->primary->SetFont(graphicsStruct->primary, fontInterface));
     
-	DFBCHECK(graphicsStruct->primary->DrawString(graphicsStruct->primary, tekst, -1,  200, 200, DSTF_LEFT));
+	DFBCHECK(graphicsStruct->primary->DrawString(graphicsStruct->primary, tekst, -1,  circleRadius - 30, 230, DSTF_LEFT));
 	if (isThereTeletext)
 	{
-		DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0xFF, 0x55));
-		DFBCHECK(graphicsStruct->primary->DrawString(graphicsStruct->primary, "TTX", -1,  250, 250, DSTF_LEFT));
+		DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0xFF, 0x11));
+		DFBCHECK(graphicsStruct->primary->DrawString(graphicsStruct->primary, "TTX", -1,  250, 300, DSTF_LEFT));
 	}
     
 	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));

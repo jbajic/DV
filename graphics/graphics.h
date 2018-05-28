@@ -22,6 +22,7 @@
 
 #include <directfb.h>
 #include "./../base.h"
+#include <math.h>
 
 /**
  * Sound dimensions 
@@ -43,6 +44,7 @@
 #define NUMBER_OF_CLOCK_LINES 7
 #define NUMBER_OF_DIGITS 4
 
+#define degreesToRadians(angleDegrees) ((angleDegrees) * M_PI / 180.0)
 #define roundfunc(x) ((int) ((x) > 0.0 ? (x) + 0.5 : (x) - 0.5))
 #define DFBCHECK(x...)                                      \
 {                                                           \

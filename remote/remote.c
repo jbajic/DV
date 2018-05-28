@@ -318,7 +318,7 @@ void* initRemoteLoop(void* args)
         if (getKeys(NUM_EVENTS, (uint8_t*)remoteArgs->eventBuf, &eventCnt, remoteArgs->inputFileDesc))
         {
 			printf("Error while reading input events !");
-			// return ERROR;
+			return (void*) ERROR;
 		}
 
         for (i = 0; i < eventCnt; i++)
