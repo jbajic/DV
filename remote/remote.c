@@ -104,7 +104,6 @@ static void removeGraphicsFeature(void* args)
 {
     timer_remove_graphics_feature* graphicsFeaturesTimer = (timer_remove_graphics_feature*) args;
     printf("Clear screen\n");
-    activeReminder = NULL;
     clearGraphicsFeatures(graphicsFeaturesTimer->graphicsStruct, graphicsFeaturesTimer->featureToRemove);
 }
 
@@ -138,10 +137,9 @@ static void showChannelInfo(graphics* graphicsStruct, int32_t currentChannel, ti
     }
     graphicsStruct->graphicsElements.channelNumber = currentChannel;
     graphicsStruct->graphicsElements.isThereTTX = isThereTeletext;
-    drawGraphics(graphicsStruct, G_FEATURE_CHANNEL_INFO);
+    drawGraphicsFeatures(graphicsStruct, G_FEATURE_CHANNEL_INFO);
 
     // drawChannelInfo(graphicsStruct, currentChannel, isThereTeletext);
-    activeReminder = NULL;
     timer_settime(removeChannelInfo->timerId, removeChannelInfo->timerFlags, &removeChannelInfo->timerSpec, &removeChannelInfo->timerSpecOld);
 }
 
@@ -158,27 +156,28 @@ static void showChannelInfo(graphics* graphicsStruct, int32_t currentChannel, ti
 *   ERROR, if there is error
 *   NO_ERROR, if there is no error
 ****************************************************************************/
-static void changeChannel(change_channel_args* changeChannelArgs, timer_struct* removeChannelInfoTimer)
+static void changeChannel(change_channel_args* changeChannelArgs, timer_struct* removeChannelNumberTypedTimer)
 {
-    if (changeChannelArgs->channelNumber <= 0)
+    if (changeChannelArgs->channelNumber != changeChannelArgs->currentChannel)
     {
-        changeChannelArgs->currentChannel = changeChannelArgs->numberOfPrograms - 1;
+        if (changeChannelArgs->channelNumber <= 0)
+        {
+            changeChannelArgs->currentChannel = changeChannelArgs->numberOfPrograms - 1;
+        }
+        else if (changeChannelArgs->channelNumber > changeChannelArgs->numberOfPrograms - 1)
+        {
+            changeChannelArgs->currentChannel = 1;
+        }
+        else
+        {
+            changeChannelArgs->currentChannel = changeChannelArgs->channelNumber;
+        }
+        // printf("numberOfChannels %d\nchannel current %d\nchannelNumber %d\n", changeChannelArgs->numberOfPrograms, 
+            // changeChannelArgs->currentChannel, changeChannelArgs->channelNumber);
+        changeStream(changeChannelArgs->handles, changeChannelArgs->currentChannel);
+        changeChannelArgs->channelNumber = 0;
     }
-    else if (changeChannelArgs->channelNumber > changeChannelArgs->numberOfPrograms - 1)
-    {
-        changeChannelArgs->currentChannel = 1;
-    }
-    else
-    {
-        changeChannelArgs->currentChannel = changeChannelArgs->channelNumber;
-    }
-    // printf("numberOfChannels %d\nchannel current %d\nchannelNumber %d\n", changeChannelArgs->numberOfPrograms, 
-        // changeChannelArgs->currentChannel, changeChannelArgs->channelNumber);
-    changeStream(changeChannelArgs->handles, changeChannelArgs->currentChannel);
-    changeChannelArgs->channelNumber = 0;
-    activeReminder = NULL;
-
-    showChannelInfo(changeChannelArgs->graphicsStruct, changeChannelArgs->currentChannel, removeChannelInfoTimer);
+    showChannelInfo(changeChannelArgs->graphicsStruct, changeChannelArgs->currentChannel, removeChannelNumberTypedTimer);
 }
 
 /****************************************************************************
@@ -194,7 +193,7 @@ static void changeChannelNumber(void* arg)
 {
     timer_channel_changer_args* timeArgs = (timer_channel_changer_args*) arg;
     printf("changeChannelNumber Full Channel %d\n", timeArgs->changeChannelArgs->channelNumber);
-    changeChannel(timeArgs->changeChannelArgs, timeArgs->removeChannelInfoTimer);
+    changeChannel(timeArgs->changeChannelArgs, timeArgs->removeChannelNumberTypedTimer);
 }
 
 /****************************************************************************
@@ -255,7 +254,7 @@ void* checkForTDTData(void* args)
             printf("MATCHING REMINDER %d\n", activeReminder->channel_index);
             backgroundProc->graphicsStruct->graphicsElements.reminderChannelNumber = activeReminder->channel_index;
             backgroundProc->graphicsStruct->graphicsElements.chosenButton = 1;
-            drawGraphics(backgroundProc->graphicsStruct, G_FEATURE_REMINDER);
+            drawGraphicsFeatures(backgroundProc->graphicsStruct, G_FEATURE_REMINDER);
         }
         if (activeReminder != NULL)
         {
@@ -300,6 +299,8 @@ void* initRemoteLoop(void* args)
     timer_remove_graphics_feature removeFeatureTimerChannel = {.graphicsStruct = remoteArgs->graphicsStruct, .featureToRemove = G_FEATURE_CHANNEL_INFO};
     timer_remove_graphics_feature removeFeatureTimerSound = {.graphicsStruct = remoteArgs->graphicsStruct, .featureToRemove = G_FEATURE_VOLUME};
     timer_remove_graphics_feature removeFeatureTimerTime = {.graphicsStruct = remoteArgs->graphicsStruct, .featureToRemove = G_FEATURE_TIME};
+    timer_remove_graphics_feature removeFeatureTypedNumbers = 
+        {.graphicsStruct = remoteArgs->graphicsStruct, .featureToRemove = G_FEATURE_CHANNEL_NUMBER | G_FEATURE_CHANNEL_INFO};
     Player_Volume_Get(remoteArgs->handles->playerHandle, &soundVolume);
 
     change_channel_args changeChannelArgs;
@@ -311,17 +312,19 @@ void* initRemoteLoop(void* args)
 
     timer_channel_changer_args timeArgs;
     timeArgs.changeChannelArgs = &changeChannelArgs;
-    timeArgs.removeChannelInfoTimer = &channelRemoveInfoTimer;
+    timeArgs.removeChannelNumberTypedTimer = (timer_struct*) malloc(sizeof(timer_struct));
 
     // Timer when when chaging channel via numbers
     setupTimer(&timeArgs.channelChangerTimer, changeChannelNumber, (void*) &timeArgs, 2);
+    // Timer when when chaging channel time has elapsed for removing numbers
+    setupTimer(timeArgs.removeChannelNumberTypedTimer, removeGraphicsFeature, &removeFeatureTypedNumbers, 2);
+
     // Timer to remove channelInfo graphics
     setupTimer(&channelRemoveInfoTimer, removeGraphicsFeature, &removeFeatureTimerChannel, 3);
     // Timer to remove soundInfo graphics
     setupTimer(&soundRemoveTimer, removeGraphicsFeature, &removeFeatureTimerSound, 3);
     // Timer to remove time graphics
     setupTimer(&timeRemoveTimer, removeGraphicsFeature, &removeFeatureTimerTime, 3);
-    printf("remote initiate loop4\n");
 
     while(TRUE)
     {
@@ -349,10 +352,20 @@ void* initRemoteLoop(void* args)
                     case REM_CHANNEL_9:
                     {
                         printf("Before calling timer %d\n", timeArgs.changeChannelArgs->channelNumber);
-                        if (timeArgs.changeChannelArgs->channelNumber < 999)
+                        if ((changeChannelArgs.channelNumber * 10 + remoteArgs->eventBuf[i].code - 1) < 999)
                         {
-                            changeChannelArgs.channelNumber = changeChannelArgs.channelNumber * 10 + remoteArgs->eventBuf[i].code - 1;
+                            if (remoteArgs->eventBuf[i].code == REM_CHANNEL_0)
+                            {
+                                changeChannelArgs.channelNumber = changeChannelArgs.channelNumber * 10;
+                            }
+                            else
+                            {
+                                changeChannelArgs.channelNumber = changeChannelArgs.channelNumber * 10 + remoteArgs->eventBuf[i].code - 1;
+                            }
+                            
                             printf("calling timer %d\n", changeChannelArgs.channelNumber);
+                            remoteArgs->graphicsStruct->graphicsElements.channelNumberTyped = changeChannelArgs.channelNumber;
+                            drawGraphicsFeatures(remoteArgs->graphicsStruct, G_FEATURE_CHANNEL_NUMBER);
                             timer_settime(timeArgs.channelChangerTimer.timerId, timeArgs.channelChangerTimer.timerFlags, 
                                 &timeArgs.channelChangerTimer.timerSpec, &timeArgs.channelChangerTimer.timerSpecOld);
                         }
@@ -380,7 +393,7 @@ void* initRemoteLoop(void* args)
                         }
                         // drawSoundInfo(remoteArgs->graphicsStruct, soundVolume);
                         remoteArgs->graphicsStruct->graphicsElements.soundVolume = soundVolume;
-                        drawGraphics(remoteArgs->graphicsStruct, G_FEATURE_VOLUME);
+                        drawGraphicsFeatures(remoteArgs->graphicsStruct, G_FEATURE_VOLUME);
                         timer_settime(soundRemoveTimer.timerId, soundRemoveTimer.timerFlags, &soundRemoveTimer.timerSpec,
                             &soundRemoveTimer.timerSpecOld);
                         mute = FALSE;
@@ -402,7 +415,7 @@ void* initRemoteLoop(void* args)
                             Player_Volume_Set(remoteArgs->handles->playerHandle, soundVolume);
                         }
                         remoteArgs->graphicsStruct->graphicsElements.soundVolume = soundVolume;
-                        drawGraphics(remoteArgs->graphicsStruct, G_FEATURE_VOLUME);
+                        drawGraphicsFeatures(remoteArgs->graphicsStruct, G_FEATURE_VOLUME);
                         timer_settime(soundRemoveTimer.timerId, soundRemoveTimer.timerFlags, &soundRemoveTimer.timerSpec,
                             &soundRemoveTimer.timerSpecOld);
                         mute = FALSE;                        
@@ -433,7 +446,7 @@ void* initRemoteLoop(void* args)
                             // drawReminder(remoteArgs->graphicsStruct, activeReminder->channel_index, chosenButton);
                             remoteArgs->graphicsStruct->graphicsElements.reminderChannelNumber = activeReminder->channel_index;
                             remoteArgs->graphicsStruct->graphicsElements.chosenButton = chosenButton;
-                            drawGraphics(remoteArgs->graphicsStruct, G_FEATURE_REMINDER);
+                            drawGraphicsFeatures(remoteArgs->graphicsStruct, G_FEATURE_REMINDER);
                         }
                         break;
                     }
@@ -445,7 +458,7 @@ void* initRemoteLoop(void* args)
                             chosenButton = 2;
                             remoteArgs->graphicsStruct->graphicsElements.reminderChannelNumber = activeReminder->channel_index;
                             remoteArgs->graphicsStruct->graphicsElements.chosenButton = chosenButton;
-                            drawGraphics(remoteArgs->graphicsStruct, G_FEATURE_REMINDER);
+                            drawGraphicsFeatures(remoteArgs->graphicsStruct, G_FEATURE_REMINDER);
                         }
                         break;
                     }
@@ -459,6 +472,7 @@ void* initRemoteLoop(void* args)
                                 changeChannel(&changeChannelArgs, &channelRemoveInfoTimer);
                             }
                             clearGraphicsFeatures(remoteArgs->graphicsStruct, G_FEATURE_REMINDER);
+                            activeReminder = NULL;                            
                         }
                         break;
                     }
@@ -481,7 +495,7 @@ void* initRemoteLoop(void* args)
                         //read button for time
                         // drawTime(remoteArgs->graphicsStruct, tdtTable->dateTimeUTC.time);
                         remoteArgs->graphicsStruct->graphicsElements.timeUtc = tdtTable->dateTimeUTC.time;
-                        drawGraphics(remoteArgs->graphicsStruct, G_FEATURE_TIME);
+                        drawGraphicsFeatures(remoteArgs->graphicsStruct, G_FEATURE_TIME);
                         timer_settime(timeRemoveTimer.timerId, timeRemoveTimer.timerFlags, &timeRemoveTimer.timerSpec, &timeRemoveTimer.timerSpecOld);
                         break;
                      }
@@ -497,5 +511,7 @@ void* initRemoteLoop(void* args)
     timer_delete(channelRemoveInfoTimer.timerId);
     timer_delete(soundRemoveTimer.timerId);
     timer_delete(timeArgs.channelChangerTimer.timerId);
+    // timer_delete(timeArgs.removeChannelNumberTypedTime->timerId);
+    free(timeArgs.removeChannelNumberTypedTimer);
     return (void*) NO_ERROR;
 }

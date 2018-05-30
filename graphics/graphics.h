@@ -27,7 +27,7 @@
 /**
  * Graphics feature
 */
-#define NUMBER_OF_GRAPHICS_FEATURES 4
+#define NUMBER_OF_GRAPHICS_FEATURES 5
 
 /**
  * Sound dimensions 
@@ -78,12 +78,14 @@ enum graphics_features
     G_FEATURE_CHANNEL_INFO = 0b00000001,
     G_FEATURE_VOLUME = 0b00000010,
     G_FEATURE_REMINDER = 0b00000100,
-    G_FEATURE_TIME = 0b00001000
+    G_FEATURE_TIME = 0b00001000,
+    G_FEATURE_CHANNEL_NUMBER = 0b00010000
 };
 
 typedef struct _graphics_elements
 {
     int32_t channelNumber;
+    int32_t channelNumberTyped;
     uint8_t isThereTTX;
     int32_t soundVolume;
     int32_t reminderChannelNumber;
@@ -121,8 +123,33 @@ typedef struct _graphics_features_drawing
 ****************************************************************************/
 int32_t initGraphics(graphics* graphicsStruct);
 
-int32_t drawGraphics(graphics* graphicsStruct, uint8_t flags);
+/****************************************************************************
+*
+* @brief
+* Function for drawing certainElements
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*       flags - [in] Flag containing all elements to remove
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t drawGraphicsFeatures(graphics* graphicsStruct, uint8_t flags);
 
+/****************************************************************************
+*
+* @brief
+* Function for clearing certain graphics elements
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*       flags - [in] Flag containing all elements to remove
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
 int32_t clearGraphicsFeatures(graphics* graphicsStruct, uint8_t flags);
 
 /****************************************************************************
@@ -132,8 +159,6 @@ int32_t clearGraphicsFeatures(graphics* graphicsStruct, uint8_t flags);
 *
 * @param
 *       graphicsStruct - [in] Graphics structure in which all graphics will be found
-*       channelNumber - [in] Number of channel
-*       isThereTeletext - [in] Integer indicating if the programm has teletext
 *
 * @return
 *   ERROR, if there is error
@@ -148,7 +173,6 @@ int32_t drawChannelInfo(graphics* graphicsStruct);
 *
 * @param
 *       graphicsStruct - [in] Graphics structure in which all graphics will be found
-*       volume - [in] Volume
 *
 * @return
 *   ERROR, if there is error
@@ -163,8 +187,6 @@ int32_t drawSoundInfo(graphics* graphicsStruct);
 *
 * @param
 *       graphicsStruct - [in] Graphics structure in which all graphics will be found
-*       channelNumber - [in] Number of channel to switch
-*       chosenButton - [in] Chosen button (left or right)
 *
 * @return
 *   ERROR, if there is error
@@ -179,13 +201,26 @@ int32_t drawReminder(graphics* graphicsStruct);
 *
 * @param
 *       graphicsStruct - [in] Graphics structure in which all graphics will be found
-*       timeUtc - [in] Time to show on digital clock
 *
 * @return
 *   ERROR, if there is error
 *   NO_ERROR, if there is no error
 ****************************************************************************/
 int32_t drawTime(graphics* graphicsStruct);
+
+/****************************************************************************
+*
+* @brief
+* Function for drawing channel number
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t drawChannelNumber(graphics* graphicsStruct);
 
 /****************************************************************************
 *

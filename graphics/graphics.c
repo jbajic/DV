@@ -39,7 +39,8 @@ static graphics_features_drawing graphicsFeaturesArray[NUMBER_OF_GRAPHICS_FEATUR
 	{.feature = G_FEATURE_CHANNEL_INFO, .drawingFunction = drawChannelInfo},
 	{.feature = G_FEATURE_VOLUME, .drawingFunction = drawSoundInfo},
 	{.feature = G_FEATURE_REMINDER, .drawingFunction = drawReminder},
-	{.feature = G_FEATURE_TIME, .drawingFunction = drawTime}
+	{.feature = G_FEATURE_TIME, .drawingFunction = drawTime},
+	{.feature = G_FEATURE_CHANNEL_NUMBER, .drawingFunction = drawChannelNumber}
 };
 
 uint8_t featureFlags = 0b00000000;
@@ -47,7 +48,7 @@ uint8_t featureFlags = 0b00000000;
 /****************************************************************************
 *
 * @brief
-* Function for initializin graphics structure
+* Function for initializing graphics structure
 *
 * @param
 *       graphicsStruct - [in] Graphics structure in which all graphics will be found
@@ -81,20 +82,42 @@ int32_t initGraphics(graphics* graphicsStruct)
     return NO_ERROR;
 }
 
-int32_t showGraphicsDraw(graphics* graphicsStruct)
+/****************************************************************************
+*
+* @brief
+* Function for showing drawn graphics elements
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+static int32_t showGraphicsDraw(graphics* graphicsStruct)
 {
 	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
 
 	return NO_ERROR;
 }
 
-int32_t clearGraphicsFeatures(graphics* graphicsStruct, uint8_t flags)
+
+/****************************************************************************
+*
+* @brief
+* Function for drawing all graphics elements
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+static int32_t drawAllGraphicsElements(graphics* graphicsStruct)
 {
 	uint8_t i;
 	clearGraphics(graphicsStruct);
-	printf("clearGraphicsFeatures\nFLAGS: %d\n", flags);
-	featureFlags = featureFlags & (~flags);
-	printf("FEATURE FLAGS: %d\n", featureFlags);
 	for (i = 0; i < NUMBER_OF_GRAPHICS_FEATURES; ++i)
 	{
 		if (featureFlags & graphicsFeaturesArray[i].feature)
@@ -106,22 +129,44 @@ int32_t clearGraphicsFeatures(graphics* graphicsStruct, uint8_t flags)
 	return NO_ERROR;
 }
 
-int32_t drawGraphics(graphics* graphicsStruct, uint8_t flags)
+/****************************************************************************
+*
+* @brief
+* Function for clearing certain graphics elements
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*       flags - [in] Flag containing all elements to remove
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t clearGraphicsFeatures(graphics* graphicsStruct, uint8_t flags)
 {
-	uint8_t i;
-	clearGraphics(graphicsStruct);
-	printf("drawGraphics\nFLAGS: %d\n", flags);
+	printf("clearGraphicsFeatures\nFLAGS: %d\n", flags);
+	featureFlags = featureFlags & (~flags);
+	drawAllGraphicsElements(graphicsStruct);
+	return NO_ERROR;
+}
+
+/****************************************************************************
+*
+* @brief
+* Function for drawing certainElements
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*       flags - [in] Flag containing all elements to remove
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t drawGraphicsFeatures(graphics* graphicsStruct, uint8_t flags)
+{
+	printf("drawGraphicsFeatures\nFLAGS: %d\n", flags);
 	featureFlags = featureFlags | flags;
-	printf("FEATURE FLAGS: %d\n", featureFlags);
-	for (i = 0; i < NUMBER_OF_GRAPHICS_FEATURES; ++i)
-	{
-		if (featureFlags & graphicsFeaturesArray[i].feature)
-		{
-			graphicsFeaturesArray[i].drawingFunction(graphicsStruct);
-			printf("DRAWING %d\n", i);
-		}
-	}
-	showGraphicsDraw(graphicsStruct);
+	drawAllGraphicsElements(graphicsStruct);
 	return NO_ERROR;
 }
 
@@ -421,7 +466,6 @@ static int32_t getNumberFromTime(time_utc timeUtc, int32_t index)
 *
 * @param
 *       graphicsStruct - [in] Graphics structure in which all graphics will be found
-*       timeUtc - [in] Time to show on digital clock
 *
 * @return
 *   ERROR, if there is error
@@ -502,6 +546,43 @@ int32_t drawTime(graphics* graphicsStruct)
 	}
 
 	// DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
+	
+	pthread_mutex_unlock(&graphicsMutex);
+	return NO_ERROR;
+}
+
+/****************************************************************************
+*
+* @brief
+* Function for chanign color when drawing clock
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t drawChannelNumber(graphics* graphicsStruct)
+{
+	pthread_mutex_lock(&graphicsMutex);
+	char tekst[3];
+	sprintf(tekst, "%d", graphicsStruct->graphicsElements.channelNumberTyped);
+	IDirectFBFont *fontInterface = NULL;
+	DFBFontDescription fontDesc;
+	
+	fontDesc.flags = DFDESC_HEIGHT;
+	fontDesc.height = 50;
+
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0xFF, 0xFF));
+
+	// DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0xff));
+	DFBCHECK(graphicsStruct->dfbInterface->CreateFont(graphicsStruct->dfbInterface, "/home/galois/fonts/DejaVuSans.ttf", &fontDesc, &fontInterface));
+	DFBCHECK(graphicsStruct->primary->SetFont(graphicsStruct->primary, fontInterface));
+
+	DFBCHECK(graphicsStruct->primary->DrawString(graphicsStruct->primary, tekst, -1,
+		graphicsStruct->screenWidth / 2,  
+		graphicsStruct->screenHeight / 2, DSTF_LEFT));
 	
 	pthread_mutex_unlock(&graphicsMutex);
 	return NO_ERROR;

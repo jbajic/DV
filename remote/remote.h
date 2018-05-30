@@ -89,7 +89,7 @@ typedef struct _timer_channel_changer_args
 {
     change_channel_args* changeChannelArgs;
     timer_struct channelChangerTimer;
-    timer_struct* removeChannelInfoTimer;
+    timer_struct* removeChannelNumberTypedTimer;
 } timer_channel_changer_args;
 
 /****************************************************************************
