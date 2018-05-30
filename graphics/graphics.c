@@ -35,6 +35,15 @@ static int32_t numberToDigitalClock[10][7] =
 	{CLOCK_TOP_LINE, CLOCK_RIGHT_UPPER_LINE, CLOCK_LEFT_UPPER_LINE, CLOCK_MIDDLE_LINE, CLOCK_RIGHT_LOWER_LINE}//9
 };
 
+static graphics_features_drawing graphicsFeaturesArray[NUMBER_OF_GRAPHICS_FEATURES] = {
+	{.feature = G_FEATURE_CHANNEL_INFO, .drawingFunction = drawChannelInfo},
+	{.feature = G_FEATURE_VOLUME, .drawingFunction = drawSoundInfo},
+	{.feature = G_FEATURE_REMINDER, .drawingFunction = drawReminder},
+	{.feature = G_FEATURE_TIME, .drawingFunction = drawTime}
+};
+
+uint8_t featureFlags = 0b00000000;
+
 /****************************************************************************
 *
 * @brief
@@ -72,6 +81,50 @@ int32_t initGraphics(graphics* graphicsStruct)
     return NO_ERROR;
 }
 
+int32_t showGraphicsDraw(graphics* graphicsStruct)
+{
+	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
+
+	return NO_ERROR;
+}
+
+int32_t clearGraphicsFeatures(graphics* graphicsStruct, uint8_t flags)
+{
+	uint8_t i;
+	clearGraphics(graphicsStruct);
+	printf("clearGraphicsFeatures\nFLAGS: %d\n", flags);
+	featureFlags = featureFlags & (~flags);
+	printf("FEATURE FLAGS: %d\n", featureFlags);
+	for (i = 0; i < NUMBER_OF_GRAPHICS_FEATURES; ++i)
+	{
+		if (featureFlags & graphicsFeaturesArray[i].feature)
+		{
+			graphicsFeaturesArray[i].drawingFunction(graphicsStruct);
+		}
+	}
+	showGraphicsDraw(graphicsStruct);
+	return NO_ERROR;
+}
+
+int32_t drawGraphics(graphics* graphicsStruct, uint8_t flags)
+{
+	uint8_t i;
+	clearGraphics(graphicsStruct);
+	printf("drawGraphics\nFLAGS: %d\n", flags);
+	featureFlags = featureFlags | flags;
+	printf("FEATURE FLAGS: %d\n", featureFlags);
+	for (i = 0; i < NUMBER_OF_GRAPHICS_FEATURES; ++i)
+	{
+		if (featureFlags & graphicsFeaturesArray[i].feature)
+		{
+			graphicsFeaturesArray[i].drawingFunction(graphicsStruct);
+			printf("DRAWING %d\n", i);
+		}
+	}
+	showGraphicsDraw(graphicsStruct);
+	return NO_ERROR;
+}
+
 /****************************************************************************
 *
 * @brief
@@ -86,21 +139,21 @@ int32_t initGraphics(graphics* graphicsStruct)
 *   ERROR, if there is error
 *   NO_ERROR, if there is no error
 ****************************************************************************/
-int32_t drawChannelInfo(graphics* graphicsStruct, int32_t channelNumber, int8_t isThereTeletext)
+int32_t drawChannelInfo(graphics* graphicsStruct)
 {
 	pthread_mutex_lock(&graphicsMutex);
 	int32_t i;
 	char tekst[10];
-	sprintf(tekst, "Channel %d", channelNumber);
+	sprintf(tekst, "Channel %d", graphicsStruct->graphicsElements.channelNumber);
 	float circleRadius, circleWidthDifference, circleOffsetX, circleOffsetY;
 	circleRadius = 200;
 	circleWidthDifference = 40;
 	circleOffsetX = 300;
 	circleOffsetY = 250;
 
-	//clear surface
-	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x00));
-	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 0, 0, graphicsStruct->screenWidth, graphicsStruct->screenHeight));
+	// //clear surface
+	// DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x00));
+	// DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 0, 0, graphicsStruct->screenWidth, graphicsStruct->screenHeight));
 
 	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0xAA));
 	for (i = 0; i <= 360; i++)
@@ -122,13 +175,13 @@ int32_t drawChannelInfo(graphics* graphicsStruct, int32_t channelNumber, int8_t 
 	DFBCHECK(graphicsStruct->primary->SetFont(graphicsStruct->primary, fontInterface));
     
 	DFBCHECK(graphicsStruct->primary->DrawString(graphicsStruct->primary, tekst, -1,  circleRadius - 30, 230, DSTF_LEFT));
-	if (isThereTeletext)
+	if (graphicsStruct->graphicsElements.isThereTTX)
 	{
 		DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0xFF, 0x11));
 		DFBCHECK(graphicsStruct->primary->DrawString(graphicsStruct->primary, "TTX", -1,  250, 300, DSTF_LEFT));
 	}
     
-	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
+	// DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
     pthread_mutex_unlock(&graphicsMutex);
     return NO_ERROR;
 }
@@ -146,17 +199,17 @@ int32_t drawChannelInfo(graphics* graphicsStruct, int32_t channelNumber, int8_t 
 *   ERROR, if there is error
 *   NO_ERROR, if there is no error
 ****************************************************************************/
-int32_t drawSoundInfo(graphics* graphicsStruct, uint32_t volume)
+int32_t drawSoundInfo(graphics* graphicsStruct)
 {
 	pthread_mutex_lock(&graphicsMutex);
-	int32_t volumePercent = roundfunc(((float)volume / INT32_MAX) * 100);
+	int32_t volumePercent = roundfunc(((float) graphicsStruct->graphicsElements.soundVolume / INT32_MAX) * 100);
 	int32_t i;
 	char tekst[10];
 	sprintf(tekst, "%d %%", volumePercent);
 
-	//clear surface
-	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x00));
-	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 0, 0, graphicsStruct->screenWidth, graphicsStruct->screenHeight));
+	// //clear surface
+	// DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x00));
+	// DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 0, 0, graphicsStruct->screenWidth, graphicsStruct->screenHeight));
 
 	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0xAA));
     DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 
@@ -194,7 +247,7 @@ int32_t drawSoundInfo(graphics* graphicsStruct, uint32_t volume)
 	DFBCHECK(graphicsStruct->primary->SetFont(graphicsStruct->primary, fontInterface));
 	DFBCHECK(graphicsStruct->primary->DrawString(graphicsStruct->primary, tekst, -1,
 		graphicsStruct->screenWidth - 150,  graphicsStruct->screenHeight - 150, DSTF_LEFT));
-	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
+	// DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
     
 	pthread_mutex_unlock(&graphicsMutex);
     return NO_ERROR;
@@ -207,14 +260,12 @@ int32_t drawSoundInfo(graphics* graphicsStruct, uint32_t volume)
 *
 * @param
 *       graphicsStruct - [in] Graphics structure in which all graphics will be found
-*       channelNumber - [in] Number of channel to switch
-*       chosenButton - [in] Chosen button (left or right)
 *
 * @return
 *   ERROR, if there is error
 *   NO_ERROR, if there is no error
 ****************************************************************************/
-int32_t drawReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t chosenButton)
+int32_t drawReminder(graphics* graphicsStruct)
 {
 	pthread_mutex_lock(&graphicsMutex);
 	printf("Show reminder\n");
@@ -236,16 +287,13 @@ int32_t drawReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t ch
 
 	buttonTwoX = graphicsStruct->screenWidth * 0.5 + 0.5 * boxPadding;
 	buttonTwoY = boxY + boxHeight - boxPadding - buttonHeight;
-	sprintf(tekst2, " channel %d?", channelNumber);
-	//clear surface
-	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x00));
-	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 0, 0, graphicsStruct->screenWidth, graphicsStruct->screenHeight));
+	sprintf(tekst2, " channel %d?", graphicsStruct->graphicsElements.reminderChannelNumber);
 
 	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0xAA));
     DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, boxX, boxY, boxWidth, boxHeight));
 
 	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0xFF));
-	if (chosenButton == 1)
+	if (graphicsStruct->graphicsElements.chosenButton == 1)
 	{
 		DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, buttonTwoX, buttonTwoY, buttonWidth, buttonHeight));
 		DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0xFF, 0xFF));
@@ -288,7 +336,7 @@ int32_t drawReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t ch
 		boxX + boxWidth * 0.5 + 0.5 * boxPadding + buttonWidth * 0.3,
 		boxY + boxHeight - boxPadding - textPadding, DSTF_LEFT));
 
-	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
+	// DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
 
 	pthread_mutex_unlock(&graphicsMutex);
 	return NO_ERROR;
@@ -379,14 +427,11 @@ static int32_t getNumberFromTime(time_utc timeUtc, int32_t index)
 *   ERROR, if there is error
 *   NO_ERROR, if there is no error
 ****************************************************************************/
-int32_t drawTime(graphics* graphicsStruct, time_utc timeUtc)
+int32_t drawTime(graphics* graphicsStruct)
 {
 	pthread_mutex_lock(&graphicsMutex);
 	float boxX, boxY, boxHeight, boxWidth, boxPadding, lineLength, lineWidness, linePadding, numberOffset, minutesOffset;
 	int32_t i, number;
-	//clear surface
-	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x00));
-	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 0, 0, graphicsStruct->screenWidth, graphicsStruct->screenHeight));
 
 	lineLength = 70;
 	lineWidness = 5;
@@ -414,7 +459,7 @@ int32_t drawTime(graphics* graphicsStruct, time_utc timeUtc)
 
 	for (i = 0; i < NUMBER_OF_DIGITS; ++i)
 	{
-		number = getNumberFromTime(timeUtc, i);
+		number = getNumberFromTime(graphicsStruct->graphicsElements.timeUtc, i);
 		if (i >= 2)
 		{
 			minutesOffset = lineLength;
@@ -456,7 +501,7 @@ int32_t drawTime(graphics* graphicsStruct, time_utc timeUtc)
 		lineWidness, lineLength));
 	}
 
-	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
+	// DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
 	
 	pthread_mutex_unlock(&graphicsMutex);
 	return NO_ERROR;
@@ -479,7 +524,7 @@ int32_t clearGraphics(graphics* graphicsStruct)
 	pthread_mutex_lock(&graphicsMutex);
 	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x00));
 	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 0, 0, graphicsStruct->screenWidth, graphicsStruct->screenHeight));
-	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
+	// DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
 	pthread_mutex_unlock(&graphicsMutex);
     return NO_ERROR;
 }

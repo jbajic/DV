@@ -57,6 +57,12 @@ enum remote_keys
     REM_RED_BUTTON = 398
 };
 
+typedef struct _timer_remove_graphics_feature
+{
+    graphics* graphicsStruct;
+    enum graphics_features featureToRemove;
+} timer_remove_graphics_feature;
+
 typedef struct _back_proc_args
 {
     graphics* graphicsStruct;

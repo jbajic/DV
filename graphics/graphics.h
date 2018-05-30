@@ -25,6 +25,11 @@
 #include <math.h>
 
 /**
+ * Graphics feature
+*/
+#define NUMBER_OF_GRAPHICS_FEATURES 4
+
+/**
  * Sound dimensions 
 **/
 #define MAX_VOLUME_LINES 10
@@ -68,14 +73,39 @@ enum digital_clock_lines
     CLOCK_MIDDLE_LINE = 7
 };
 
+enum graphics_features
+{
+    G_FEATURE_CHANNEL_INFO = 0b00000001,
+    G_FEATURE_VOLUME = 0b00000010,
+    G_FEATURE_REMINDER = 0b00000100,
+    G_FEATURE_TIME = 0b00001000
+};
+
+typedef struct _graphics_elements
+{
+    int32_t channelNumber;
+    uint8_t isThereTTX;
+    int32_t soundVolume;
+    int32_t reminderChannelNumber;
+    uint8_t chosenButton;
+    time_utc timeUtc;
+} graphics_elements;
+
 typedef struct _graphics
 {
     IDirectFBSurface *primary;
     IDirectFB *dfbInterface;
-    int screenWidth;
-    int screenHeight;
+    int32_t screenWidth;
+    int32_t screenHeight;
     DFBSurfaceDescription surfaceDesc;
+    graphics_elements graphicsElements;
 } graphics;
+
+typedef struct _graphics_features_drawing
+{
+    enum graphics_features feature;
+    int32_t (*drawingFunction) (graphics*);
+} graphics_features_drawing;
 
 /****************************************************************************
 *
@@ -91,6 +121,10 @@ typedef struct _graphics
 ****************************************************************************/
 int32_t initGraphics(graphics* graphicsStruct);
 
+int32_t drawGraphics(graphics* graphicsStruct, uint8_t flags);
+
+int32_t clearGraphicsFeatures(graphics* graphicsStruct, uint8_t flags);
+
 /****************************************************************************
 *
 * @brief
@@ -105,7 +139,7 @@ int32_t initGraphics(graphics* graphicsStruct);
 *   ERROR, if there is error
 *   NO_ERROR, if there is no error
 ****************************************************************************/
-int32_t drawChannelInfo(graphics* graphicsStruct, int32_t channelNumber, int8_t isThereTeletext);
+int32_t drawChannelInfo(graphics* graphicsStruct);
 
 /****************************************************************************
 *
@@ -120,7 +154,7 @@ int32_t drawChannelInfo(graphics* graphicsStruct, int32_t channelNumber, int8_t 
 *   ERROR, if there is error
 *   NO_ERROR, if there is no error
 ****************************************************************************/
-int32_t drawSoundInfo(graphics* graphicsStruct, uint32_t volume);
+int32_t drawSoundInfo(graphics* graphicsStruct);
 
 /****************************************************************************
 *
@@ -136,7 +170,7 @@ int32_t drawSoundInfo(graphics* graphicsStruct, uint32_t volume);
 *   ERROR, if there is error
 *   NO_ERROR, if there is no error
 ****************************************************************************/
-int32_t drawReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t chosenButton);
+int32_t drawReminder(graphics* graphicsStruct);
 
 /****************************************************************************
 *
@@ -151,7 +185,7 @@ int32_t drawReminder(graphics* graphicsStruct, int32_t channelNumber, uint8_t ch
 *   ERROR, if there is error
 *   NO_ERROR, if there is no error
 ****************************************************************************/
-int32_t drawTime(graphics* graphicsStruct, time_utc timeUtc);
+int32_t drawTime(graphics* graphicsStruct);
 
 /****************************************************************************
 *
