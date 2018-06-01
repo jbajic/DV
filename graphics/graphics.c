@@ -574,15 +574,18 @@ int32_t drawChannelNumber(graphics* graphicsStruct)
 	fontDesc.flags = DFDESC_HEIGHT;
 	fontDesc.height = 50;
 
-	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0xFF, 0xFF));
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0xFF));
+	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary,
+		graphicsStruct->screenWidth / 2 - 10, 10,
+		120, 50));
 
-	// DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0xff));
+	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0xFF, 0xFF));
 	DFBCHECK(graphicsStruct->dfbInterface->CreateFont(graphicsStruct->dfbInterface, "/home/galois/fonts/DejaVuSans.ttf", &fontDesc, &fontInterface));
 	DFBCHECK(graphicsStruct->primary->SetFont(graphicsStruct->primary, fontInterface));
 
 	DFBCHECK(graphicsStruct->primary->DrawString(graphicsStruct->primary, tekst, -1,
 		graphicsStruct->screenWidth / 2,  
-		graphicsStruct->screenHeight / 2, DSTF_LEFT));
+		50, DSTF_LEFT));
 	
 	pthread_mutex_unlock(&graphicsMutex);
 	return NO_ERROR;
