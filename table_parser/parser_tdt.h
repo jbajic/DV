@@ -37,6 +37,8 @@ typedef struct _tdt_table {
 *
 * @param
 *       buffer - [in] Pointer to the filtered incoming streamn which contains TDT table packets
+*       tableParserMutex - [in] Mutex for parsing tables
+*       tableParserCondition - [in] Condition to signal if table is parsed
 *
 * @return
 *   NO_ERROR, in case of no error

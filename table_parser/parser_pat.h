@@ -60,6 +60,15 @@ typedef struct _pat_table {
 ****************************************************************************/
 int32_t filterPATParserCallback(uint8_t* buffer, pthread_mutex_t* tableParserMutex, pthread_cond_t* tableParserCondition);
 
+/****************************************************************************
+*
+* @brief
+* Function fo returnig pointer to the parsed PAT table
+*
+* @return
+*   pat_table*
+*
+****************************************************************************/
 pat_table* getPATTable();
 
 #endif

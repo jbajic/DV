@@ -26,6 +26,11 @@ tot_table totTable;
 * @brief
 * Function for parsing TOT table
 *
+* @param
+*       buffer - [in] Buffer containing table data
+*       tableParserMutex - [in] Mutex for parsing tables
+*       tableParserCondition - [in] Condition to signal if table is parsed
+*
 * @return
 *   NO_ERROR, in case of no error
 *   ERROR, in case of error

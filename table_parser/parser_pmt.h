@@ -44,10 +44,47 @@ typedef struct _pmt_table {
 	pmt_streams* streams;
 } pmt_table;
 
+/****************************************************************************
+*
+* @brief
+* Function for parsing PMT table
+*
+* @param
+*       buffer - [in] Pointer to the filtered incoming streamn which contains PMT table packets
+*       tableParserMutex - [in] Mutex for parsing tables
+*       tableParserCondition - [in] Condition to signal if table is parsed
+* @return
+*   NO_ERROR, in case of no error
+*   ERROR, in case of error
+*
+****************************************************************************/
 int32_t filterPMTParserCallback(uint8_t*, pthread_mutex_t* tableParserMutex, pthread_cond_t* tableParserCondition);
 
+/****************************************************************************
+*
+* @brief
+* Function for returnig pointer to the parsed PMT table
+*
+* @param
+*       channelNumber - [in] Number of channel to return
+*
+* @return
+*   pmt_table*
+*
+****************************************************************************/
 pmt_table* getPMTTable(int32_t channelNumber);
 
+/****************************************************************************
+*
+* @brief
+* Function for allocating memory for PMT tables
+* @param
+*       number_of_programs - [in] Number of programms to allocate
+*
+* @return
+*   pmt_table*
+*
+****************************************************************************/
 void allocatePMTTables(int32_t);
 
 #endif
