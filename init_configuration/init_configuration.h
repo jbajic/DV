@@ -21,7 +21,6 @@
 #define INIT_CONFIGURATION_H
 
 #include <string.h>
-#include "tdp_api.h"
 #include "./../base.h"
 #include "reminder_node.h"
 

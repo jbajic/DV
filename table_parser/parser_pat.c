@@ -34,7 +34,7 @@ static pat_table patTable;
 *   ERROR, in case of error
 *
 ****************************************************************************/
-int32_t filterPATParserCallback(uint8_t* buffer)
+int32_t filterPATParserCallback(uint8_t* buffer, pthread_mutex_t* tableParserMutex, pthread_cond_t* tableParserCondition)
 {
     int i;
     printf("\n\nSection arrived!!!\n\n");
@@ -86,9 +86,9 @@ int32_t filterPATParserCallback(uint8_t* buffer)
 	// printf("last_section_number: %d\n", patTable.last_section_number);
 	// printf("broj bajtova u foru: %d\n", patTable.pat_header.section_length - 5 - 4);
 
-	pthread_mutex_lock(&tableParserMutex);
-	pthread_cond_signal(&tableParserCondition);
-	pthread_mutex_unlock(&tableParserMutex);
+	pthread_mutex_lock(tableParserMutex);
+	pthread_cond_signal(tableParserCondition);
+	pthread_mutex_unlock(tableParserMutex);
     return NO_ERROR;
 }
 

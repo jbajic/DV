@@ -20,7 +20,6 @@
 #include "parser_pmt.h"
 
 static pmt_table* pmtTables;
-// static int isPMTTableParsed = FALSE;
 static int currentPMTTableIndex = 0;
 
 /****************************************************************************
@@ -36,11 +35,10 @@ static int currentPMTTableIndex = 0;
 *   ERROR, in case of error
 *
 ****************************************************************************/
-int32_t filterPMTParserCallback(uint8_t* buffer)
+int32_t filterPMTParserCallback(uint8_t* buffer, pthread_mutex_t* tableParserMutex, pthread_cond_t* tableParserCondition)
 {
     int i, maxNumberOfStreams, numberOfBytesStreams;
 	int offset = 0;
-	// isPMTTableParsed = FALSE;
 	pmt_table* currentPMT = &pmtTables[currentPMTTableIndex];
 	printf("PMT arrived\n");
 
@@ -107,9 +105,9 @@ int32_t filterPMTParserCallback(uint8_t* buffer)
     }
 	currentPMT->numberOfStreams = i;
 	currentPMTTableIndex++;
-	pthread_mutex_lock(&tableParserMutex);
-	pthread_cond_signal(&tableParserCondition);
-	pthread_mutex_unlock(&tableParserMutex);
+	pthread_mutex_lock(tableParserMutex);
+	pthread_cond_signal(tableParserCondition);
+	pthread_mutex_unlock(tableParserMutex);
     return NO_ERROR;
 }
 

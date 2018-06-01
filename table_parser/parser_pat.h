@@ -20,7 +20,7 @@
 #ifndef PARSER_PAT_H
 #define PARSER_PAT_H
 
-#include "table.h"
+#include "./../base.h"
 
 typedef struct _pat_header {
 	uint8_t table_id;
@@ -58,7 +58,7 @@ typedef struct _pat_table {
 *   ERROR, in case of error
 *
 ****************************************************************************/
-int32_t filterPATParserCallback(uint8_t* buffer);
+int32_t filterPATParserCallback(uint8_t* buffer, pthread_mutex_t* tableParserMutex, pthread_cond_t* tableParserCondition);
 
 pat_table* getPATTable();
 

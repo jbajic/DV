@@ -29,17 +29,23 @@
 #include <linux/input.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "tdp_api.h"
 
-#ifdef DEBUG
-#undef DEBUG
+#ifndef TDPAPI_H_
+    #define ERROR -1
+    #define NO_ERROR 0
 #endif
-#define DEBUG 0
-
-#define ERROR 1
-#define NO_ERROR 0
 
 #define TRUE 1
 #define FALSE 0
+
+
+#define ASSERT_TDP_RESULT(x,y)  if(NO_ERROR == x) \
+                                    printf("%s success\n", y); \
+                                else{ \
+                                    printf("%s fail\n", y); \
+                                    return -1; \
+                                }
 
 typedef struct _time_utc
 {
@@ -74,5 +80,13 @@ typedef struct thread_args
     pthread_mutex_t mutex;
     pthread_cond_t condition;
 } thread_args;
+
+typedef struct _player_handles {
+    uint32_t playerHandle;
+    uint32_t sourceHandle;
+    uint32_t videoStreamHandle;
+    uint32_t audioStreamHandle;
+    uint32_t filterHandle;
+} player_handles;
 
 #endif

@@ -67,37 +67,20 @@ static void* threadTDTAndTOTTableParse(void* args)
     printf("threadTDTAndTOTTableParse1\n");
     player_handles_thread_args* threadTOTAndTDTArgs = (player_handles_thread_args*) args;
     printf("threadTDTAndTOTTableParse3\n");
-    setFilterToTable(filterTOTParserCallback, threadTOTAndTDTArgs->handles, tdt_and_tot_table_pid, tot_table_id);
-    printf("threadTDTAndTOTTableParse2\n");
-    freeFilterCallback(filterTOTParserCallback, threadTOTAndTDTArgs->handles);
+    // setFilterToTable(filterTOTParserCallback, threadTOTAndTDTArgs->handles, tdt_and_tot_table_pid, tot_table_id);
+    // printf("threadTDTAndTOTTableParse2\n");
+    // freeFilterCallback(filterTOTParserCallback, threadTOTAndTDTArgs->handles);
+    parseTable(TABLE_TOT, threadTOTAndTDTArgs->handles, 0);
+    // stopParsing(threadTOTAndTDTArgs->handles);
 
-    setFilterToTable(filterTDTParserCallback, threadTOTAndTDTArgs->handles, tdt_and_tot_table_pid, tdt_table_id);
+    // setFilterToTable(filterTDTParserCallback, threadTOTAndTDTArgs->handles, tdt_and_tot_table_pid, tdt_table_id);
+    parseTable(TABLE_TDT, threadTOTAndTDTArgs->handles, 0);
     pthread_mutex_lock(&threadTOTAndTDTArgs->threadArguments->mutex);
-    pthread_cond_wait( &threadTOTAndTDTArgs->threadArguments->condition, &threadTOTAndTDTArgs->threadArguments->mutex ); 
-    freeFilterCallback(filterTDTParserCallback, threadTOTAndTDTArgs->handles);
+    pthread_cond_wait( &threadTOTAndTDTArgs->threadArguments->condition, &threadTOTAndTDTArgs->threadArguments->mutex); 
+    // stopParsing(threadTOTAndTDTArgs->handles);
     pthread_mutex_unlock(&threadTOTAndTDTArgs->threadArguments->mutex);
     free(threadTOTAndTDTArgs);
     return NO_ERROR;
-}
-
-/****************************************************************************
-*
-* @brief
-* Function for changing coloc in console if there is error
-*
-* @param
-*       attr - [in] attributes
-*       fg - [in] foreground
-*       bg - [in] background
-*
-****************************************************************************/
-static inline void textColor(int32_t attr, int32_t fg, int32_t bg)
-{
-   char command[13];
-
-   /* Command is the control command to the terminal */
-   sprintf(command, "%c[%d;%d;%dm", 0x1B, attr, fg + 30, bg + 40);
-   printf("%s", command);
 }
 
 /****************************************************************************
@@ -188,80 +171,25 @@ int32_t startPlayer(player_handles* handles)
 ****************************************************************************/
 int32_t setupData(player_handles* handles, thread_args* threadArguments)
 {
-    int32_t i;
+    int32_t i, result;
     pthread_t threadTDTAndTOTTableParseThread;
     player_handles_thread_args* threadTOTAndTDTArgs = (player_handles_thread_args*) malloc(sizeof(player_handles_thread_args));
     threadTOTAndTDTArgs->handles = handles;
     threadTOTAndTDTArgs->threadArguments = threadArguments;
 
-    setFilterToTable(filterPATParserCallback, handles, pat_table_pid, pat_table_id);
-    freeFilterCallback(filterPATParserCallback, handles);
+    result = parseTable(TABLE_PAT, handles, 0);
+    printf("Parsed PAT %d\n", result);
+    // stopParsing(handles);
 
     pat_table* patTable = getPATTable();
     allocatePMTTables(patTable->number_of_programs);
     for (i = 0; i < patTable->number_of_programs - 1; i++)
     {
-        setFilterToTable(filterPMTParserCallback, handles, patTable->pat_programm[i + 1].programm_map_pid, pmt_table_id);
-        freeFilterCallback(filterPMTParserCallback, handles);
+        result = parseTable(TABLE_PMT, handles, patTable->pat_programm[i + 1].programm_map_pid);
+        printf("Parsed PMT %d %d\n", i, result);
+        // stopParsing(handles);
     }
     pthread_create(&threadTDTAndTOTTableParseThread, NULL, threadTDTAndTOTTableParse, threadTOTAndTDTArgs);
-
-    return NO_ERROR;
-}
-
-/****************************************************************************
-*
-* @brief
-* Function for starting the demux filtering
-*
-* @param
-*       filterCallback() - [in] Which filterCallback to playe in demux
-*       isTableParsed() - [in] Callback of the table to tell if that table is parsed
-*       handles - [in] structure containing all handles
-*       tablePID - [in] PID of table to parse
-*       tableId - [in] ID of table to parse
-*
-* @return
-*   ERROR, if there is error
-*   NO_ERROR, if there is no error
-****************************************************************************/
-int32_t setFilterToTable(int32_t (*filterCallback)(uint8_t*), player_handles* handles, int32_t tablePID, int32_t tableId)
-{
-    int32_t result;
-    /* Set filter to demux */
-    result = Demux_Set_Filter(handles->playerHandle, tablePID, tableId, &handles->filterHandle);
-    ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
-    
-    /* Register section filter callback */
-    result = Demux_Register_Section_Filter_Callback(filterCallback);
-    ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
-
-    waitForTableToParse();
-
-    return NO_ERROR;
-}
-
-/****************************************************************************
-*
-* @brief
-* Function for freeing filter
-*
-* @param
-*       filterCallback() - [in] Which filterCallback to playe in demux
-*       handles - [in] structure containing all handles
-*
-* @return
-*   ERROR, if there is error
-*   NO_ERROR, if there is no error
-****************************************************************************/
-int32_t freeFilterCallback(int32_t (*filterCallback)(uint8_t*), player_handles* handles)
-{
-    int32_t result;
-    /* Free demux filter */
-    result = Demux_Unregister_Section_Filter_Callback(filterCallback);
-    ASSERT_TDP_RESULT(result, "Demux_Unregister_Section_Filter_Callback");
-	result = Demux_Free_Filter(handles->playerHandle, handles->filterHandle);
-    ASSERT_TDP_RESULT(result, "Demux_Free_Filter");
 
     return NO_ERROR;
 }

@@ -25,7 +25,6 @@ static int32_t getKeys(int32_t count, uint8_t* buf, uint32_t* eventsRead, int32_
 {
     int32_t ret = 0;
     
-    // printf("buff5: %u\n inputfile5 %d\n", *buf, inputFileDesc);
     ret = read(inputFileDesc, buf, (size_t)(count * (int) sizeof(struct input_event)));
     if (ret <= 0)
     {

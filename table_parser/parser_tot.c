@@ -31,7 +31,7 @@ tot_table totTable;
 *   ERROR, in case of error
 *
 ****************************************************************************/
-int32_t filterTOTParserCallback(uint8_t* buffer)
+int32_t filterTOTParserCallback(uint8_t* buffer, pthread_mutex_t* tableParserMutex, pthread_cond_t* tableParserCondition)
 {
     uint16_t mjd, numberOfLocales;
     int32_t i;
@@ -149,9 +149,9 @@ int32_t filterTOTParserCallback(uint8_t* buffer)
     printf("HOURS : %u\n", totTable.dateTimeUTC.time.hours);
     printf("MINUTES: %u\n", totTable.dateTimeUTC.time.minutes);
     printf("SECONDS : %u\n", totTable.dateTimeUTC.time.seconds);
-    pthread_mutex_lock(&tableParserMutex);
-	pthread_cond_signal(&tableParserCondition);
-	pthread_mutex_unlock(&tableParserMutex);
+    pthread_mutex_lock(tableParserMutex);
+	pthread_cond_signal(tableParserCondition);
+	pthread_mutex_unlock(tableParserMutex);
     return NO_ERROR;
 }
 

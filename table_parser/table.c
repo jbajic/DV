@@ -1,7 +1,96 @@
+/****************************************************************************
+*
+* FERIT
+*
+* -----------------------------------------------------
+* Ispitni zadatak iz predmeta:
+*
+* Digitalna videotehnika
+* -----------------------------------------------------
+* TV aplikacija (Sifra: PPUTVIOS_07_2018_OS)
+* -----------------------------------------------------
+*
+* \table.c
+* \brief
+* File defines functions needed for setting ceratin table for parsing
+* Made on 21.05.2018.
+*
+* @Author Jure Bajic
+*****************************************************************************/
 #include "table.h"
 
-pthread_mutex_t tableParserMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t tableParserCondition = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t tableParserMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t tableParserCondition = PTHREAD_COND_INITIALIZER;
+static uint8_t currentParsingTable = 0;
+
+/****************************************************************************
+*
+* @brief
+* Function for parsing PAT table
+*
+* @param
+*       buffer - [in] Pointer to the filtered incoming streamn which contains PAT table packets
+*
+* @return
+*   NO_ERROR, in case of no error
+*   ERROR, in case of error
+*
+****************************************************************************/
+static int32_t filterCallback(uint8_t* buffer)
+{
+    switch(currentParsingTable)
+    {
+        case TABLE_PAT:
+        {
+            filterPATParserCallback(buffer, &tableParserMutex, &tableParserCondition);
+            break;
+        }
+        case TABLE_PMT:
+        {
+            filterPMTParserCallback(buffer, &tableParserMutex, &tableParserCondition);
+            break;
+        }
+        case TABLE_TOT:
+        {
+            filterTOTParserCallback(buffer, &tableParserMutex, &tableParserCondition);
+            break;
+        }
+        case TABLE_TDT:
+        {
+            filterTDTParserCallback(buffer, &tableParserMutex, &tableParserCondition);
+            break;
+        }
+        default:
+        {
+            return ERROR;
+        }
+    }
+    return NO_ERROR;
+}
+
+/****************************************************************************
+*
+* @brief
+* Function for freeing filter
+*
+* @param
+*       handles - [in] structure containing all handles
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t stopParsing(player_handles* handles)
+{
+    int32_t result;
+    /* Free demux filter */
+    result = Demux_Unregister_Section_Filter_Callback(filterCallback);
+    ASSERT_TDP_RESULT(result, "Demux_Unregister_Section_Filter_Callback");
+	result = Demux_Free_Filter(handles->playerHandle, handles->filterHandle);
+    ASSERT_TDP_RESULT(result, "Demux_Free_Filter");
+
+    return NO_ERROR;
+}
 
 /****************************************************************************
 *
@@ -22,27 +111,81 @@ int32_t waitForTableToParse()
 /****************************************************************************
 *
 * @brief
-* Function for calculating date from MJD
+* Function for starting the demux filtering
 *
 * @param
-*       dateStruct - [in] Date struct in which calculated date will be written to
-*       mjd - [in] Modified Julian Date
+*       handles - [in] structure containing all handles
+*       tablePID - [in] PID of table to parse
+*       tableId - [in] ID of table to parse
 *
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
 ****************************************************************************/
-void setDateFromMJD(date_tdt* dateStruct, uint16_t mjd)
+static int32_t setFilterToTable(player_handles* handles, int32_t tablePID, int32_t tableId)
 {
-    int16_t k;
-    dateStruct->year = (int) ((mjd - (float) 15078.2) / 365.25);
-    dateStruct->month = (int) ((mjd - (float) 14956.1 - (dateStruct->year * (float) 365.25)) / (float) 30.6001);
-    dateStruct->dayInMonth = (uint8_t) (mjd - 14956 - (int) (dateStruct->year * (float) 365.25) - (int) (dateStruct->month *  (float) 30.6001));
-    if (dateStruct->month == 14 || dateStruct->month == 15)
+    int32_t result;
+    /* Set filter to demux */
+    result = Demux_Set_Filter(handles->playerHandle, tablePID, tableId, &handles->filterHandle);
+    ASSERT_TDP_RESULT(result, "Demux_Set_Filter");
+    
+    /* Register section filter callback */
+    result = Demux_Register_Section_Filter_Callback(filterCallback);
+    ASSERT_TDP_RESULT(result, "Demux_Register_Section_Filter_Callback");
+
+    waitForTableToParse();
+
+    if (tablePID != TDT_TABLE_ID)
     {
-        k = 1;
+        stopParsing(handles);
     }
-    else 
+    return NO_ERROR;
+}
+
+/****************************************************************************
+*
+* @brief
+* Function for parsing table
+*
+* @param
+*       tableType - [in] Enum specifying which table to parse
+*       handles - [in] Structure containing all handles
+*       pmtPID - [in] Exists only if the parsing table is PMT
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+int32_t parseTable(enum table_types tableType, player_handles* handles, int32_t pmtPID)
+{
+    currentParsingTable = tableType;
+    switch(tableType)
     {
-        k = 0;
+        case TABLE_PAT:
+        {
+            setFilterToTable(handles, PAT_TABLE_PID, PAT_TABLE_ID);
+            break;
+        }
+        case TABLE_PMT:
+        {
+            setFilterToTable(handles, pmtPID, PMT_TABLE_ID);
+            break;
+        }
+        case TABLE_TOT:
+        {
+            setFilterToTable(handles, TDT_AND_TOT_TABLE_PID, TOT_TABLE_ID);
+            break;
+        }
+        case TABLE_TDT:
+        {
+            setFilterToTable(handles, TDT_AND_TOT_TABLE_PID, TDT_TABLE_ID);
+            break;
+        }
+        default:
+        {
+            return ERROR;
+        }
     }
-    dateStruct->year += k;
-    dateStruct->month -= 1 - 12 * k;
+
+    return NO_ERROR;
 }

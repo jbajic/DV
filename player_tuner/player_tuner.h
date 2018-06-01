@@ -25,31 +25,11 @@
 #include "errno.h"
 
 #include "./../init_configuration/init_configuration.h"
-#include "./../table_parser/parser_pat.h"
-#include "./../table_parser/parser_pmt.h"
-#include "./../table_parser/parser_tdt.h"
-#include "./../table_parser/parser_tot.h"
-
-#define ASSERT_TDP_RESULT(x,y)  if(NO_ERROR == x) \
-                                    printf("%s success\n", y); \
-                                else{ \
-                                    textColor(1,1,0); \
-                                    printf("%s fail\n", y); \
-                                    textColor(0,7,0); \
-                                    return -1; \
-                                }
+#include "./../table_parser/table.h"
 
 #define FREQUENCY_MGH 1000000
 #define STREAM_NOT_FOUND 0
 #define NO_STREAM_TYPE 1
-
-typedef struct _player_handles {
-    uint32_t playerHandle;
-    uint32_t sourceHandle;
-    uint32_t videoStreamHandle;
-    uint32_t audioStreamHandle;
-    uint32_t filterHandle;
-} player_handles;
 
 typedef struct _player_handles_reminders
 {
@@ -62,20 +42,6 @@ typedef struct _player_handles_thread_args
     player_handles* handles;
     thread_args* threadArguments;
 } player_handles_thread_args;
-
-enum table_id
-{
-    pat_table_id = 0x00,
-    pmt_table_id = 0x02,
-    tdt_table_id = 0x70,
-    tot_table_id = 0x73
-};
-
-enum table_pid
-{
-    pat_table_pid = 0x00000,
-    tdt_and_tot_table_pid = 0x0014,
-};
 
 /****************************************************************************
 *

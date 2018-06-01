@@ -20,7 +20,7 @@
 #ifndef PARSER_TDT_H
 #define PARSER_TDT_H
 
-#include "table.h"
+#include "./../base.h"
 
 typedef struct _tdt_table {
     uint8_t tableId;
@@ -43,7 +43,7 @@ typedef struct _tdt_table {
 *   ERROR, in case of error
 *
 ****************************************************************************/
-int32_t filterTDTParserCallback(uint8_t*);
+int32_t filterTDTParserCallback(uint8_t*, pthread_mutex_t* tableParserMutex, pthread_cond_t* tableParserCondition);
 
 /****************************************************************************
 *
@@ -58,5 +58,17 @@ int32_t filterTDTParserCallback(uint8_t*);
 *
 ****************************************************************************/
 tdt_table* getTDTTable();
+
+/****************************************************************************
+*
+* @brief
+* Function for calculating date from MJD
+*
+* @param
+*       dateStruct - [in] Date struct in which calculated date will be written to
+*       mjd - [in] Modified Julian Date
+*
+****************************************************************************/
+void setDateFromMJD(date_tdt* dateStruct, uint16_t mjd);
 
 #endif
