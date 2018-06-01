@@ -12,7 +12,7 @@
 *
 * \base.h
 * \brief
-* File with basic functions and macrois available throughtout all modules
+* File with basic functions, macrois and structures available throughtout all modules
 * Made on 08.05.2018.
 *
 * @Author Jure Bajic

@@ -23,12 +23,7 @@
 #include "./../player_tuner/player_tuner.h"
 #include "./../graphics/graphics.h"
 #include <linux/input.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <signal.h>
-#include <stdint.h>
 #include <errno.h>
-#include <time.h>
 
 #define NUM_EVENTS  5
 

@@ -86,7 +86,21 @@ typedef struct _config_parameters
     reminder* headReminder;
 } config_parameters;
 
-int32_t loadFile(char** file_path, config_parameters*);
+/****************************************************************************
+*
+* @brief
+* Function takes in file path from which it parses neccesary data for config file
+*
+* @param
+*       filePath - [in] Field of characters representig file path to config
+*       config - [in] Pointer to structure of config parameters
+*
+* @return
+*   NO_ERROR, in case of no error
+*   ERROR, in case of error
+*
+****************************************************************************/
+int32_t loadFile(char** file_path, config_parameters* config);
 
 /****************************************************************************
 *

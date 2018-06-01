@@ -135,7 +135,7 @@ static int32_t setFilterToTable(player_handles* handles, int32_t tablePID, int32
 
     waitForTableToParse();
 
-    if (tablePID != TDT_TABLE_ID)
+    if (currentParsingTable != TABLE_TDT)
     {
         stopParsing(handles);
     }

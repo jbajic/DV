@@ -58,7 +58,7 @@ typedef struct _pmt_table {
 *   ERROR, in case of error
 *
 ****************************************************************************/
-int32_t filterPMTParserCallback(uint8_t*, pthread_mutex_t* tableParserMutex, pthread_cond_t* tableParserCondition);
+int32_t filterPMTParserCallback(uint8_t* buffer, pthread_mutex_t* tableParserMutex, pthread_cond_t* tableParserCondition);
 
 /****************************************************************************
 *
