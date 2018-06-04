@@ -20,6 +20,8 @@
 #include "graphics.h"
 
 static pthread_mutex_t graphicsMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t graphicsCondition = PTHREAD_COND_INITIALIZER;
+static pthread_t drawThread;
 
 static int32_t numberToDigitalClock[10][7] =
 {
@@ -44,6 +46,62 @@ static graphics_features_drawing graphicsFeaturesArray[NUMBER_OF_GRAPHICS_FEATUR
 };
 
 uint8_t featureFlags = 0b00000000;
+
+
+/****************************************************************************
+*
+* @brief
+* Function for showing drawn graphics elements
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+static int32_t showGraphicsDraw(graphics* graphicsStruct)
+{
+	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
+
+	return NO_ERROR;
+}
+
+/****************************************************************************
+*
+* @brief
+* Function for drawing all graphics elements
+*
+* @param
+*       graphicsStruct - [in] Graphics structure in which all graphics will be found
+*
+* @return
+*   ERROR, if there is error
+*   NO_ERROR, if there is no error
+****************************************************************************/
+static void* drawAllGraphicsElements(void* args)
+{
+	graphics* graphicsStruct = (graphics*) args;
+	uint8_t i;
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	while(TRUE)
+	{
+		pthread_mutex_lock(&graphicsMutex);
+		pthread_cond_wait(&graphicsCondition, &graphicsMutex);
+		pthread_mutex_unlock(&graphicsMutex);
+
+		clearGraphics(graphicsStruct);
+		for (i = 0; i < NUMBER_OF_GRAPHICS_FEATURES; ++i)
+		{
+			if (featureFlags & graphicsFeaturesArray[i].feature)
+			{
+				graphicsFeaturesArray[i].drawingFunction(graphicsStruct);
+			}
+		}
+		showGraphicsDraw(graphicsStruct);
+	}
+	return NO_ERROR;
+}
 
 /****************************************************************************
 *
@@ -79,54 +137,8 @@ int32_t initGraphics(graphics* graphicsStruct)
     /* fetch the screen size */
     DFBCHECK (graphicsStruct->primary->GetSize(graphicsStruct->primary, &graphicsStruct->screenWidth, &graphicsStruct->screenHeight));
 	pthread_mutex_unlock(&graphicsMutex);
+	pthread_create(&drawThread, NULL, drawAllGraphicsElements, graphicsStruct);
     return NO_ERROR;
-}
-
-/****************************************************************************
-*
-* @brief
-* Function for showing drawn graphics elements
-*
-* @param
-*       graphicsStruct - [in] Graphics structure in which all graphics will be found
-*
-* @return
-*   ERROR, if there is error
-*   NO_ERROR, if there is no error
-****************************************************************************/
-static int32_t showGraphicsDraw(graphics* graphicsStruct)
-{
-	DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
-
-	return NO_ERROR;
-}
-
-
-/****************************************************************************
-*
-* @brief
-* Function for drawing all graphics elements
-*
-* @param
-*       graphicsStruct - [in] Graphics structure in which all graphics will be found
-*
-* @return
-*   ERROR, if there is error
-*   NO_ERROR, if there is no error
-****************************************************************************/
-static int32_t drawAllGraphicsElements(graphics* graphicsStruct)
-{
-	uint8_t i;
-	clearGraphics(graphicsStruct);
-	for (i = 0; i < NUMBER_OF_GRAPHICS_FEATURES; ++i)
-	{
-		if (featureFlags & graphicsFeaturesArray[i].feature)
-		{
-			graphicsFeaturesArray[i].drawingFunction(graphicsStruct);
-		}
-	}
-	showGraphicsDraw(graphicsStruct);
-	return NO_ERROR;
 }
 
 /****************************************************************************
@@ -146,7 +158,10 @@ int32_t clearGraphicsFeatures(graphics* graphicsStruct, uint8_t flags)
 {
 	printf("clearGraphicsFeatures\nFLAGS: %d\n", flags);
 	featureFlags = featureFlags & (~flags);
-	drawAllGraphicsElements(graphicsStruct);
+	// drawAllGraphicsElements(graphicsStruct);
+	pthread_mutex_lock(&graphicsMutex);
+	pthread_cond_signal(&graphicsCondition);
+	pthread_mutex_unlock(&graphicsMutex);
 	return NO_ERROR;
 }
 
@@ -166,7 +181,10 @@ int32_t drawGraphicsFeatures(graphics* graphicsStruct, uint8_t flags)
 {
 	printf("drawGraphicsFeatures\nFLAGS: %d\n", flags);
 	featureFlags = featureFlags | flags;
-	drawAllGraphicsElements(graphicsStruct);
+	// drawAllGraphicsElements(graphicsStruct);
+	pthread_mutex_lock(&graphicsMutex);
+	pthread_cond_signal(&graphicsCondition);
+	pthread_mutex_unlock(&graphicsMutex);
 	return NO_ERROR;
 }
 
@@ -632,6 +650,7 @@ int32_t clearGraphics(graphics* graphicsStruct)
 int32_t deinitGraphics(graphics* graphicsStruct)
 {
 	pthread_mutex_lock(&graphicsMutex);
+	pthread_cancel(drawThread);
 	graphicsStruct->primary->Release(graphicsStruct->primary);
 	graphicsStruct->dfbInterface->Release(graphicsStruct->dfbInterface);
 	
