@@ -227,6 +227,7 @@ int32_t drawChannelInfo(graphics* graphicsStruct)
 	}
     
 	// DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
+	fontInterface->Release(fontInterface);
     pthread_mutex_unlock(&graphicsMutex);
     return NO_ERROR;
 }
@@ -294,6 +295,7 @@ int32_t drawSoundInfo(graphics* graphicsStruct)
 		graphicsStruct->screenWidth - 150,  graphicsStruct->screenHeight - 150, DSTF_LEFT));
 	// DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
     
+	fontInterface->Release(fontInterface);
 	pthread_mutex_unlock(&graphicsMutex);
     return NO_ERROR;
 }
@@ -382,7 +384,7 @@ int32_t drawReminder(graphics* graphicsStruct)
 		boxY + boxHeight - boxPadding - textPadding, DSTF_LEFT));
 
 	// DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
-
+	fontInterface->Release(fontInterface);
 	pthread_mutex_unlock(&graphicsMutex);
 	return NO_ERROR;
 }
@@ -586,6 +588,8 @@ int32_t drawChannelNumber(graphics* graphicsStruct)
 	DFBCHECK(graphicsStruct->primary->DrawString(graphicsStruct->primary, tekst, -1,
 		graphicsStruct->screenWidth / 2,  
 		50, DSTF_LEFT));
+	
+	fontInterface->Release(fontInterface);
 	
 	pthread_mutex_unlock(&graphicsMutex);
 	return NO_ERROR;

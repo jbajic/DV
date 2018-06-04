@@ -159,21 +159,21 @@ static void changeChannel(change_channel_args* changeChannelArgs, timer_struct* 
 {
     if (changeChannelArgs->channelNumber != changeChannelArgs->currentChannel)
     {
-        if (changeChannelArgs->channelNumber <= 0)
+        if (changeChannelArgs->channelNumber == 0)
         {
             changeChannelArgs->currentChannel = changeChannelArgs->numberOfPrograms - 1;
+            changeStream(changeChannelArgs->handles, changeChannelArgs->currentChannel);
         }
-        else if (changeChannelArgs->channelNumber > changeChannelArgs->numberOfPrograms - 1)
+        else if (changeChannelArgs->channelNumber == changeChannelArgs->numberOfPrograms)
         {
             changeChannelArgs->currentChannel = 1;
-        }
-        else
+            changeStream(changeChannelArgs->handles, changeChannelArgs->currentChannel);
+        }   
+        else if (changeChannelArgs->channelNumber > 0 && changeChannelArgs->channelNumber < changeChannelArgs->numberOfPrograms)
         {
             changeChannelArgs->currentChannel = changeChannelArgs->channelNumber;
+            changeStream(changeChannelArgs->handles, changeChannelArgs->currentChannel);
         }
-        // printf("numberOfChannels %d\nchannel current %d\nchannelNumber %d\n", changeChannelArgs->numberOfPrograms, 
-            // changeChannelArgs->currentChannel, changeChannelArgs->channelNumber);
-        changeStream(changeChannelArgs->handles, changeChannelArgs->currentChannel);
         changeChannelArgs->channelNumber = 0;
     }
     showChannelInfo(changeChannelArgs->graphicsStruct, changeChannelArgs->currentChannel, removeChannelNumberTypedTimer);
