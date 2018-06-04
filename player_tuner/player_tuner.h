@@ -118,39 +118,6 @@ int32_t setupData(player_handles* handles, thread_args* threadArguments);
 /****************************************************************************
 *
 * @brief
-* Function for starting the demux filtering
-*
-* @param
-*       filterCallback() - [in] Which filterCallback to playe in demux
-*       isTableParsed() - [in] Callback of the table to tell if that table is parsed
-*       handles - [in] structure containing all handles
-*       tablePID - [in] PID of table to parse
-*       tableId - [in] ID of table to parse
-*
-* @return
-*   ERROR, if there is error
-*   NO_ERROR, if there is no error
-****************************************************************************/
-int32_t setFilterToTable(int32_t (*filterCallback)(uint8_t*), player_handles* handles, int32_t tablePID, int32_t tableId);
-
-/****************************************************************************
-*
-* @brief
-* Function for freeing filter
-*
-* @param
-*       filterCallback() - [in] Which filterCallback to playe in demux
-*       handles - [in] structure containing all handles
-*
-* @return
-*   ERROR, if there is error
-*   NO_ERROR, if there is no error
-****************************************************************************/
-int32_t freeFilterCallback(int32_t (*filterCallback)(uint8_t*), player_handles* handles);
-
-/****************************************************************************
-*
-* @brief
 * Function for removing stream
 *
 * @param
