@@ -329,13 +329,13 @@ void* initRemoteLoop(void* args)
     {
         if (getKeys(NUM_EVENTS, (uint8_t*)remoteArgs->eventBuf, &eventCnt, remoteArgs->inputFileDesc))
         {
-			printf("Error while reading input events !");
+			printf("Error while reading input events!\n");
 			return (void*) ERROR;
 		}
 
         for (i = 0; i < eventCnt; i++)
         {
-			if (remoteArgs->eventBuf[i].value == 1) 
+			if (remoteArgs->eventBuf[i].value == 1 || remoteArgs->eventBuf[i].value == 2) 
             {
 				switch (remoteArgs->eventBuf[i].code) 
                 {

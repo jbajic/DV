@@ -30,7 +30,9 @@ int32_t main(int argc, char** argv)
 
     removeStream(playerHandlesReminders.handles);
     printf("Condition\n");
+    pthread_mutex_lock(&threadArguments.mutex);
     pthread_cond_signal(&threadArguments.condition);
+    pthread_mutex_unlock(&threadArguments.mutex);
 
     stopPlayer(playerHandlesReminders.handles);
     deinitGraphics(graphicsStruct);

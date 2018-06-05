@@ -67,17 +67,12 @@ static void* threadTDTAndTOTTableParse(void* args)
     printf("threadTDTAndTOTTableParse1\n");
     player_handles_thread_args* threadTOTAndTDTArgs = (player_handles_thread_args*) args;
     printf("threadTDTAndTOTTableParse3\n");
-    // setFilterToTable(filterTOTParserCallback, threadTOTAndTDTArgs->handles, tdt_and_tot_table_pid, tot_table_id);
-    // printf("threadTDTAndTOTTableParse2\n");
-    // freeFilterCallback(filterTOTParserCallback, threadTOTAndTDTArgs->handles);
     parseTable(TABLE_TOT, threadTOTAndTDTArgs->handles, 0);
-    // stopParsing(threadTOTAndTDTArgs->handles);
 
-    // setFilterToTable(filterTDTParserCallback, threadTOTAndTDTArgs->handles, tdt_and_tot_table_pid, tdt_table_id);
     parseTable(TABLE_TDT, threadTOTAndTDTArgs->handles, 0);
     pthread_mutex_lock(&threadTOTAndTDTArgs->threadArguments->mutex);
     pthread_cond_wait( &threadTOTAndTDTArgs->threadArguments->condition, &threadTOTAndTDTArgs->threadArguments->mutex); 
-    // stopParsing(threadTOTAndTDTArgs->handles);
+    stopParsing(threadTOTAndTDTArgs->handles);
     pthread_mutex_unlock(&threadTOTAndTDTArgs->threadArguments->mutex);
     free(threadTOTAndTDTArgs);
     return NO_ERROR;

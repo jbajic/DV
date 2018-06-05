@@ -88,7 +88,6 @@ static void* drawAllGraphicsElements(void* args)
 	{
 		pthread_mutex_lock(&graphicsMutex);
 		pthread_cond_wait(&graphicsCondition, &graphicsMutex);
-		pthread_mutex_unlock(&graphicsMutex);
 
 		clearGraphics(graphicsStruct);
 		for (i = 0; i < NUMBER_OF_GRAPHICS_FEATURES; ++i)
@@ -99,6 +98,7 @@ static void* drawAllGraphicsElements(void* args)
 			}
 		}
 		showGraphicsDraw(graphicsStruct);
+		pthread_mutex_unlock(&graphicsMutex);
 	}
 	return NO_ERROR;
 }
@@ -156,10 +156,10 @@ int32_t initGraphics(graphics* graphicsStruct)
 ****************************************************************************/
 int32_t clearGraphicsFeatures(graphics* graphicsStruct, uint8_t flags)
 {
+	pthread_mutex_lock(&graphicsMutex);
 	printf("clearGraphicsFeatures\nFLAGS: %d\n", flags);
 	featureFlags = featureFlags & (~flags);
 	// drawAllGraphicsElements(graphicsStruct);
-	pthread_mutex_lock(&graphicsMutex);
 	pthread_cond_signal(&graphicsCondition);
 	pthread_mutex_unlock(&graphicsMutex);
 	return NO_ERROR;
@@ -179,10 +179,10 @@ int32_t clearGraphicsFeatures(graphics* graphicsStruct, uint8_t flags)
 ****************************************************************************/
 int32_t drawGraphicsFeatures(graphics* graphicsStruct, uint8_t flags)
 {
+	pthread_mutex_lock(&graphicsMutex);
 	printf("drawGraphicsFeatures\nFLAGS: %d\n", flags);
 	featureFlags = featureFlags | flags;
 	// drawAllGraphicsElements(graphicsStruct);
-	pthread_mutex_lock(&graphicsMutex);
 	pthread_cond_signal(&graphicsCondition);
 	pthread_mutex_unlock(&graphicsMutex);
 	return NO_ERROR;
@@ -204,7 +204,7 @@ int32_t drawGraphicsFeatures(graphics* graphicsStruct, uint8_t flags)
 ****************************************************************************/
 int32_t drawChannelInfo(graphics* graphicsStruct)
 {
-	pthread_mutex_lock(&graphicsMutex);
+	// pthread_mutex_lock(&graphicsMutex);
 	int32_t i;
 	char tekst[10];
 	sprintf(tekst, "Channel %d", graphicsStruct->graphicsElements.channelNumber);
@@ -246,7 +246,7 @@ int32_t drawChannelInfo(graphics* graphicsStruct)
     
 	// DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
 	fontInterface->Release(fontInterface);
-    pthread_mutex_unlock(&graphicsMutex);
+    // pthread_mutex_unlock(&graphicsMutex);
     return NO_ERROR;
 }
 
@@ -265,7 +265,7 @@ int32_t drawChannelInfo(graphics* graphicsStruct)
 ****************************************************************************/
 int32_t drawSoundInfo(graphics* graphicsStruct)
 {
-	pthread_mutex_lock(&graphicsMutex);
+	// pthread_mutex_lock(&graphicsMutex);
 	int32_t volumePercent = roundfunc(((float) graphicsStruct->graphicsElements.soundVolume / INT32_MAX) * 100);
 	int32_t i;
 	char tekst[10];
@@ -314,7 +314,7 @@ int32_t drawSoundInfo(graphics* graphicsStruct)
 	// DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
     
 	fontInterface->Release(fontInterface);
-	pthread_mutex_unlock(&graphicsMutex);
+	// pthread_mutex_unlock(&graphicsMutex);
     return NO_ERROR;
 }
 
@@ -332,7 +332,7 @@ int32_t drawSoundInfo(graphics* graphicsStruct)
 ****************************************************************************/
 int32_t drawReminder(graphics* graphicsStruct)
 {
-	pthread_mutex_lock(&graphicsMutex);
+	// pthread_mutex_lock(&graphicsMutex);
 	printf("Show reminder\n");
 	char tekst1[] = "Reminder activated. Switch to";
 	char tekst2[50];
@@ -403,7 +403,7 @@ int32_t drawReminder(graphics* graphicsStruct)
 
 	// DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
 	fontInterface->Release(fontInterface);
-	pthread_mutex_unlock(&graphicsMutex);
+	// pthread_mutex_unlock(&graphicsMutex);
 	return NO_ERROR;
 }
 
@@ -493,7 +493,7 @@ static int32_t getNumberFromTime(time_utc timeUtc, int32_t index)
 ****************************************************************************/
 int32_t drawTime(graphics* graphicsStruct)
 {
-	pthread_mutex_lock(&graphicsMutex);
+	// pthread_mutex_lock(&graphicsMutex);
 	float boxX, boxY, boxHeight, boxWidth, boxPadding, lineLength, lineWidness, linePadding, numberOffset, minutesOffset;
 	int32_t i, number;
 
@@ -567,7 +567,7 @@ int32_t drawTime(graphics* graphicsStruct)
 
 	// DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
 	
-	pthread_mutex_unlock(&graphicsMutex);
+	// pthread_mutex_unlock(&graphicsMutex);
 	return NO_ERROR;
 }
 
@@ -585,7 +585,7 @@ int32_t drawTime(graphics* graphicsStruct)
 ****************************************************************************/
 int32_t drawChannelNumber(graphics* graphicsStruct)
 {
-	pthread_mutex_lock(&graphicsMutex);
+	// pthread_mutex_lock(&graphicsMutex);
 	char tekst[3];
 	sprintf(tekst, "%d", graphicsStruct->graphicsElements.channelNumberTyped);
 	IDirectFBFont *fontInterface = NULL;
@@ -609,7 +609,7 @@ int32_t drawChannelNumber(graphics* graphicsStruct)
 	
 	fontInterface->Release(fontInterface);
 	
-	pthread_mutex_unlock(&graphicsMutex);
+	// pthread_mutex_unlock(&graphicsMutex);
 	return NO_ERROR;
 }
 
@@ -627,11 +627,11 @@ int32_t drawChannelNumber(graphics* graphicsStruct)
 ****************************************************************************/
 int32_t clearGraphics(graphics* graphicsStruct)
 {
-	pthread_mutex_lock(&graphicsMutex);
+	// pthread_mutex_lock(&graphicsMutex);
 	DFBCHECK(graphicsStruct->primary->SetColor(graphicsStruct->primary, 0x00, 0x00, 0x00, 0x00));
 	DFBCHECK(graphicsStruct->primary->FillRectangle(graphicsStruct->primary, 0, 0, graphicsStruct->screenWidth, graphicsStruct->screenHeight));
 	// DFBCHECK(graphicsStruct->primary->Flip(graphicsStruct->primary, NULL, 0));
-	pthread_mutex_unlock(&graphicsMutex);
+	// pthread_mutex_unlock(&graphicsMutex);
     return NO_ERROR;
 }
 
